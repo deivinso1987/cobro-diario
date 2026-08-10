@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1565c0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
+<title>JR COBRO DIARIO v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --az:#1565c0;--azc:#42a5f5;
+  --ve:#2e7d32;--vec:#43a047;--veb:#e8f5e9;
+  --ro:#c62828;--roc:#e53935;--rob:#ffebee;
+  --am:#e65100;--amc:#fb8c00;--amb:#fff3e0;
+  --bg:#f0f2f5;--bo:#e0e0e0;--gt:#757575;--ne:#212121;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:column;}
+
+/* LOGIN */
+#scr-login{position:fixed;inset:0;background:linear-gradient(135deg,#0d47a1,#1565c0,#1976d2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px;}
+.login-logo{font-size:4rem;margin-bottom:14px;}
+.login-title{font-size:1.8rem;font-weight:800;color:#fff;letter-spacing:1px;}
+.login-sub{font-size:.88rem;color:rgba(255,255,255,.75);margin:6px 0 32px;text-align:center;}
+.login-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.login-box h3{font-size:.9rem;font-weight:700;color:var(--az);margin-bottom:16px;text-align:center;}
+.lf{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.lf label{font-size:.72rem;font-weight:600;color:var(--gt);}
+.lf input{background:#f5f5f5;border:1.5px solid #e0e0e0;border-radius:9px;padding:12px 14px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;width:100%;}
+.lf input:focus{border-color:var(--az);background:#fff;}
+.btn-login{width:100%;background:var(--az);color:#fff;border:none;border-radius:10px;padding:14px;font-size:.95rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;margin-top:4px;}
+.btn-login:active{transform:scale(.98);}
+#login-err{font-size:.78rem;color:var(--roc);text-align:center;margin-top:8px;display:none;}
+#scr-pendiente{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:998;padding:32px;text-align:center;}
+
+/* TOPBAR */
+.topbar{background:var(--az);color:#fff;height:56px;display:flex;align-items:center;padding:0 14px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.topbar-title{flex:1;text-align:center;font-size:1rem;font-weight:700;}
+.sync-bar{padding:4px 16px;font-size:.7rem;flex-shrink:0;background:#e3f2fd;color:var(--az);border-bottom:1px solid #bbdefb;}
+.sync-bar.ok{background:var(--veb);color:var(--ve);border-color:#c8e6c9;}
+.sync-bar.err{background:var(--amb);color:var(--am);border-color:#ffcc80;}
+
+/* PAGES */
+.page{display:none;flex:1;overflow-y:auto;padding:14px 14px 80px;}
+.page.active{display:block;}
+.bnav{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid var(--bo);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08);}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--gt);font-size:.58rem;font-family:'Inter',sans-serif;font-weight:500;}
+.bnav-btn.active{color:var(--az);}
+.bnav-icon{font-size:1.25rem;}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.sc{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;}
+.si{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.si.az{background:rgba(21,101,192,.1);} .si.ve{background:rgba(46,125,50,.1);} .si.ro{background:rgba(198,40,40,.08);} .si.am{background:rgba(230,81,0,.1);}
+.sn{font-size:1.1rem;font-weight:700;}
+.sn.az{color:var(--az);} .sn.ve{color:var(--vec);} .sn.ro{color:var(--roc);} .sn.am{color:var(--amc);}
+.sl{font-size:.68rem;color:var(--gt);margin-top:2px;}
+
+/* BOTONES */
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.ab{background:var(--az);color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;text-align:center;line-height:1.4;}
+.ab:active{transform:scale(.97);}
+.ab.ve{background:var(--vec);}
+.ab.ro{background:var(--roc);}
+
+/* CRÉDITO ITEM */
+.cr-item{background:#fff;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;cursor:pointer;}
+.cr-top{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;}
+.cr-info{flex:1;min-width:0;}
+.cr-nom{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-sub{font-size:.72rem;color:var(--gt);margin-top:2px;}
+.cr-right{text-align:right;flex-shrink:0;}
+.cr-monto{font-weight:700;font-size:.92rem;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700;margin-top:3px;}
+.badge.ve{background:var(--veb);color:var(--ve);} .badge.ro{background:var(--rob);color:var(--ro);} .badge.am{background:var(--amb);color:var(--am);}
+.cr-prog{padding:0 14px 12px;}
+.prog-bar{height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;}
+.sem{width:13px;height:13px;border-radius:50%;flex-shrink:0;}
+.sem.ve{background:#43a047;box-shadow:0 0 0 3px rgba(67,160,71,.2);}
+.sem.ro{background:#e53935;box-shadow:0 0 0 3px rgba(229,57,53,.2);}
+
+/* CALENDARIO */
+.cal{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:8px;}
+.cal-d{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:600;}
+.cal-d.pg{background:var(--vec);color:#fff;} .cal-d.pe{background:#e3f2fd;color:var(--az);}
+.cal-d.vc{background:var(--roc);color:#fff;} .cal-d.hy{border:2px solid var(--az);background:#fff;color:var(--az);}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fg label{font-size:.72rem;font-weight:600;color:var(--gt);}
+.fg input,.fg select{background:var(--bg);border:1.5px solid var(--bo);border-radius:9px;padding:11px 13px;color:var(--ne);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;width:100%;}
+.fg input:focus,.fg select:focus{border-color:var(--az);background:#fff;}
+.fg .hint{font-size:.68rem;color:var(--gt);margin-top:3px;font-style:italic;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn{width:100%;border:none;border-radius:10px;padding:13px;font-size:.9rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;}
+.btn:active{transform:scale(.98);}
+.btn-az{background:var(--az);color:#fff;} .btn-out{background:#fff;color:var(--az);border:1.5px solid var(--az);}
+.btn-ro{background:var(--roc);color:#fff;} .btn-ve{background:var(--vec);color:#fff;} .btn-wa{background:#25d366;color:#fff;}
+.gap2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+
+/* PREVIEW */
+.pv-box{background:#e3f2fd;border:1px solid #bbdefb;border-radius:10px;padding:14px;margin-bottom:12px;font-size:.82rem;line-height:1.9;color:var(--az);}
+.pv-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #bbdefb;}
+.pv-row:last-child{border:none;font-weight:700;}
+
+/* DETALLE */
+.det-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0f0;}
+.det-l{font-size:.83rem;color:var(--gt);}
+.det-v{font-weight:600;font-size:.88rem;}
+.pago-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bo);}
+
+/* MODAL */
+.mb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;justify-content:center;}
+.mb.open{display:flex;}
+.mo{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:20px 20px 36px;}
+.mh{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;}
+.mt2{font-size:1rem;font-weight:700;margin-bottom:16px;}
+.sec-hdr{font-size:.74rem;font-weight:700;color:var(--az);letter-spacing:.08em;text-transform:uppercase;padding-bottom:7px;border-bottom:2px solid #e3f2fd;margin-bottom:12px;}
+.sec-title{font-size:.75rem;font-weight:700;color:var(--gt);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+
+/* SEARCH */
+.sw{position:relative;margin-bottom:12px;}
+.sw input{background:#fff;border:1.5px solid var(--bo);border-radius:10px;padding:10px 14px 10px 35px;width:100%;font-size:.88rem;font-family:'Inter',sans-serif;outline:none;}
+.sw input:focus{border-color:var(--az);}
+.sw-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gt);}
+
+/* PANEL USUARIOS (admin) */
+.user-item{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+.user-nombre{font-weight:700;font-size:.9rem;}
+.user-email{font-size:.75rem;color:var(--gt);margin:3px 0 10px;}
+.user-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-aprobar{background:var(--vec);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+.btn-rechazar{background:var(--roc);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+
+/* LOADING */
+#lo{display:flex;position:fixed;inset:0;background:rgba(21,101,192,.95);z-index:997;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.spin{font-size:3rem;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#lo p{color:#fff;font-size:1rem;font-weight:700;}
+#lo small{color:rgba(255,255,255,.7);font-size:.85rem;}
+.empty{text-align:center;padding:36px 0;color:var(--gt);}
+.cli-abo-item{background:var(--bg);border-radius:11px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;border:1.5px solid transparent;}
+.cli-abo-item:active{border-color:var(--az);background:#e3f2fd;}
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--ne);color:#fff;padding:10px 22px;border-radius:10px;font-size:.84rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;}
+.rol-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;}
+.rol-admin{background:rgba(21,101,192,.12);color:var(--az);}
+.rol-cobrador{background:rgba(67,160,71,.12);color:var(--ve);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="scr-login">
+  <div class="login-logo">💰</div>
+  <div class="login-title">JR COBRO DIARIO</div>
+  <div class="login-sub">Sistema de cobro · Inicia sesión</div>
+  <div class="login-box">
+    <h3>🔐 Iniciar sesión</h3>
+    <div class="lf"><label>Correo electrónico</label><input type="email" id="log-email" placeholder="correo@gmail.com" autocomplete="email"></div>
+    <div class="lf"><label>Contraseña</label><input type="password" id="log-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" onclick="auth.login()">Entrar</button>
+    <div id="login-err"></div>
+  </div>
+  <div style="margin-top:20px;font-size:.75rem;color:rgba(255,255,255,.5);text-align:center;">Contacta al administrador para obtener acceso</div>
+</div>
+
+<!-- PENDIENTE APROBACIÓN -->
+<div id="scr-pendiente">
+  <div style="font-size:3.5rem;margin-bottom:14px;">⏳</div>
+  <div style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">Acceso pendiente</div>
+  <div style="font-size:.85rem;color:var(--gt);margin-bottom:20px;line-height:1.7;">Tu solicitud fue enviada al administrador.<br>Espera la aprobación para continuar.</div>
+  <div id="pend-email" style="background:#e3f2fd;border-radius:10px;padding:10px 20px;font-size:.85rem;color:var(--az);font-weight:600;margin-bottom:20px;"></div>
+  <button onclick="verificarAprobacion()" style="background:var(--az);color:#fff;border:none;border-radius:10px;padding:13px 28px;font-size:.9rem;font-weight:700;cursor:pointer;margin-bottom:12px;width:100%;max-width:260px;">🔄 Verificar aprobación</button>
+  <button class="btn btn-ro" style="max-width:260px;" onclick="auth.logout()">🚪 Cerrar sesión</button>
+  <div id="pend-msg" style="margin-top:14px;font-size:.78rem;color:var(--gt);"></div>
+</div>
+
+<!-- LOADING -->
+<div id="lo"><div class="spin">🔄</div><p>JR COBRO DIARIO</p><small id="lo-txt">Verificando acceso...</small></div>
+
+<!-- APP -->
+<div id="app" style="display:none;flex-direction:column;height:100%;">
+  <div class="topbar">
+    <span style="font-size:1.1rem;cursor:pointer;" onclick="nav.menu()">☰</span>
+    <div class="topbar-title" id="tt">Inicio</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="rol-ind" class="rol-badge"></span>
+      <span style="font-size:1.1rem;cursor:pointer;" onclick="auth.logout()" title="Cerrar sesión">🚪</span>
+    </div>
+  </div>
+  <div class="sync-bar" id="sb">🔄 Conectando...</div>
+
+  <!-- INICIO -->
+  <div class="page active" id="page-inicio">
+    <div style="text-align:center;padding:12px 0 10px;">
+      <div style="font-size:1.2rem;font-weight:800;color:var(--az);">💰 JR COBRO DIARIO</div>
+      <div style="font-size:.75rem;color:var(--gt);margin-top:3px;" id="hoy-txt"></div>
+    </div>
+    <div class="sg">
+      <div class="sc"><div class="si az">📋</div><div><div class="sn az" id="s-tot">0</div><div class="sl">Créditos activos</div></div></div>
+      <div class="sc"><div class="si ve">✅</div><div><div class="sn ve" id="s-ald">0</div><div class="sl">Al día</div></div></div>
+      <div class="sc"><div class="si ro">🚨</div><div><div class="sn ro" id="s-mor">0</div><div class="sl">En mora</div></div></div>
+      <div class="sc"><div class="si am">💵</div><div><div class="sn am" id="s-hoy">$0</div><div class="sl">Cobrado hoy</div></div></div>
+    </div>
+    <div class="sg">
+      <div class="sc"><div class="si az">🏦</div><div><div class="sn az" id="s-car">$0</div><div class="sl">Cartera total</div></div></div>
+      <div class="sc"><div class="si ve">📈</div><div><div class="sn ve" id="s-cob">$0</div><div class="sl">Total cobrado</div></div></div>
+    </div>
+    <!-- Acciones según rol -->
+    <div class="ag" id="ag-admin" style="display:none;">
+      <button class="ab" onclick="modales.abrirCliente()">👤 Nuevo Cliente</button>
+      <button class="ab ve" onclick="modales.abrirAbono()">💳 Registrar Abono</button>
+      <button class="ab" onclick="nav.ir('cobros','Abonos del Día')">📄 Abonos del Día</button>
+      <button class="ab" onclick="nav.ir('creditos','Créditos')">📋 Ver Créditos</button>
+    </div>
+    <div class="ag" id="ag-cobrador" style="display:none;">
+      <button class="ab ve" style="grid-column:1/-1;" onclick="modales.abrirAbono()">💳 Registrar Abono</button>
+      <button class="ab" onclick="nav.ir('cobros','Abonos del Día')">📄 Abonos del Día</button>
+      <button class="ab" onclick="nav.ir('creditos','Créditos')">📋 Ver Créditos</button>
+    </div>
+    <!-- Solicitudes pendientes (solo admin) -->
+    <div id="panel-solic" style="display:none;background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">
+      <div class="sec-title" style="color:var(--amc);">⏳ Accesos pendientes <span id="solic-cnt" style="background:var(--roc);color:#fff;border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:6px;"></span></div>
+      <div id="solic-lista"></div>
+    </div>
+    <!-- Lista por cobrar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span class="sec-title" style="margin:0;">📋 Por cobrar hoy</span>
+      <span id="pc-cnt" style="background:var(--az);color:#fff;border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700;">0</span>
+    </div>
+    <div id="pc-lista" style="margin-bottom:14px;"></div>
+    <button onclick="modales.abrirRecordatorios()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;margin-bottom:14px;">📲 Enviar Recordatorios</button>
+  </div>
+
+  <!-- CRÉDITOS -->
+  <div class="page" id="page-creditos">
+    <div class="sw" style="margin-top:8px;"><span class="sw-ic">🔍</span><input type="text" placeholder="Buscar cliente..." oninput="renders.creditos(this.value)"></div>
+    <div class="sec-title">Créditos activos</div>
+    <div id="lista-cr"></div>
+  </div>
+
+  <!-- CLIENTES (solo admin) -->
+  <div class="page" id="page-clientes">
+    <div class="sw" style="margin-top:8px;"><span class="sw-ic">🔍</span><input type="text" placeholder="Buscar cliente..." oninput="renders.clientes(this.value)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span class="sec-title" style="margin:0;">Clientes registrados</span>
+      <span style="color:var(--az);font-size:.78rem;font-weight:700;cursor:pointer;" onclick="modales.abrirCliente()">+ Nuevo</span>
+    </div>
+    <div id="lista-cli"></div>
+  </div>
+
+  <!-- ABONOS DEL DÍA -->
+  <div class="page" id="page-cobros">
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;margin-top:8px;">
+      <div class="sec-title">📄 Abonos del Día — <span id="abo-fecha" style="text-transform:none;font-weight:600;color:var(--ne);font-size:.78rem;"></span></div>
+      <div class="det-row"><span class="det-l">Abonos realizados</span><span class="det-v" style="color:var(--vec)" id="ab-num">0</span></div>
+      <div class="det-row"><span class="det-l">Total abonado</span><span class="det-v" style="color:var(--vec)" id="ab-tot">$0</span></div>
+      <div class="det-row" style="border:none"><span class="det-l">En mora hoy</span><span class="det-v" style="color:var(--roc)" id="ab-mor">0</span></div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+      <div class="sec-title">Detalle</div>
+      <div id="ab-lista"></div>
+    </div>
+  </div>
+
+  <!-- USUARIOS (solo admin) -->
+  <div class="page" id="page-usuarios">
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;margin-top:8px;">
+      <div class="sec-title">👥 Gestión de Cobradores</div>
+      <div style="font-size:.8rem;color:var(--gt);margin-bottom:10px;">Los cobradores pueden registrar abonos pero no crear ni editar clientes o créditos.</div>
+    </div>
+    <div class="sec-title">Usuarios registrados</div>
+    <div id="lista-usuarios"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav" id="bnav-admin" style="display:none;">
+    <button class="bnav-btn active" onclick="nav.ir('inicio','Inicio',this)"><div class="bnav-icon">🏠</div><span>Inicio</span></button>
+    <button class="bnav-btn" onclick="nav.ir('creditos','Créditos',this)"><div class="bnav-icon">📋</div><span>Créditos</span></button>
+    <button class="bnav-btn" onclick="nav.ir('clientes','Clientes',this)"><div class="bnav-icon">👥</div><span>Clientes</span></button>
+    <button class="bnav-btn" onclick="nav.ir('cobros','Abonos del Día',this)"><div class="bnav-icon">📄</div><span>Abonos</span></button>
+    <button class="bnav-btn" onclick="nav.ir('usuarios','Cobradores',this)"><div class="bnav-icon">⚙️</div><span>Usuarios</span></button>
+  </div>
+  <div class="bnav" id="bnav-cobrador" style="display:none;">
+    <button class="bnav-btn active" onclick="nav.ir('inicio','Inicio',this)"><div class="bnav-icon">🏠</div><span>Inicio</span></button>
+    <button class="bnav-btn" onclick="nav.ir('creditos','Créditos',this)"><div class="bnav-icon">📋</div><span>Créditos</span></button>
+    <button class="bnav-btn" onclick="nav.ir('cobros','Abonos del Día',this)"><div class="bnav-icon">📄</div><span>Abonos</span></button>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE + CRÉDITO -->
+<div class="mb" id="m-cli"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2" id="t-cli">👤 Nuevo Cliente</div>
+  <input type="hidden" id="c-id">
+  <div class="sec-hdr">📋 Datos del cliente</div>
+  <div class="fg"><label>Nombre completo *</label><input type="text" id="c-nom" placeholder="Juan Pérez García"></div>
+  <div class="r2">
+    <div class="fg"><label>Cédula *</label><input type="text" id="c-ced" inputmode="numeric"></div>
+    <div class="fg"><label>Celular *</label><input type="tel" id="c-tel"></div>
+  </div>
+  <div class="fg"><label>Dirección</label><input type="text" id="c-dir"></div>
+  <div id="sec-cred">
+    <div class="sec-hdr" style="margin-top:14px;">💰 Datos del crédito</div>
+    <div class="fg"><label>Valor del crédito *</label><input type="text" id="cr-val" placeholder="500.000" oninput="fmtInp(this);calcPrev()" inputmode="numeric"></div>
+    <div class="r2">
+      <div class="fg"><label>% Interés</label><input type="number" id="cr-int" value="20" oninput="calcPrev()"><div class="hint">Por defecto 20%</div></div>
+      <div class="fg"><label>Días hábiles</label><input type="number" id="cr-dias" value="24" oninput="calcPrev()"><div class="hint">Por defecto 24</div></div>
+    </div>
+    <div id="cr-prev" style="display:none;" class="pv-box"></div>
+    <div class="fg"><label>Fecha de inicio *</label><input type="date" id="cr-fec"></div>
+    <div class="fg"><label>Observación</label><input type="text" id="cr-obs"></div>
+  </div>
+  <div class="gap2">
+    <button class="btn btn-out" onclick="cerrarMb('m-cli')">Cancelar</button>
+    <button class="btn btn-az" id="btn-cli-save" onclick="acc.guardarCliente()">💾 Guardar todo</button>
+  </div>
+</div></div>
+
+<!-- MODAL ABONO PASO 1 -->
+<div class="mb" id="m-abo"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2">💳 Registrar Abono</div>
+  <div id="abo-p1">
+    <div style="font-size:.8rem;color:var(--gt);margin-bottom:10px;">Selecciona el cliente:</div>
+    <div class="sw"><span class="sw-ic">🔍</span><input type="text" id="abo-bus" placeholder="Buscar nombre o cédula..." oninput="renders.aboClientes(this.value)"></div>
+    <div id="abo-cli-lista" style="max-height:50vh;overflow-y:auto;"></div>
+    <button class="btn btn-out" style="margin-top:10px;" onclick="cerrarMb('m-abo')">Cancelar</button>
+  </div>
+  <div id="abo-p2" style="display:none;">
+    <div id="abo-sel-info" style="background:#e3f2fd;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:.85rem;color:var(--az);font-weight:600;display:flex;justify-content:space-between;align-items:center;">
+      <span id="abo-sel-nom">—</span>
+      <span onclick="aboVolver()" style="font-size:.75rem;color:var(--gt);cursor:pointer;">✕ Cambiar</span>
+    </div>
+    <div id="abo-cred-info" style="display:none;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:.8rem;line-height:1.8;"></div>
+    <input type="hidden" id="abo-cred-id">
+    <div class="r2">
+      <div class="fg"><label>Valor *</label><input type="text" id="abo-val" placeholder="0" oninput="fmtInp(this)" inputmode="numeric"></div>
+      <div class="fg"><label>Fecha</label><input type="date" id="abo-fec"></div>
+    </div>
+    <div class="fg"><label>Observación</label><input type="text" id="abo-obs"></div>
+    <div class="gap2">
+      <button class="btn btn-out" onclick="aboVolver()">⬅ Volver</button>
+      <button class="btn btn-ve" onclick="acc.guardarAbono()">✅ Registrar</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL DETALLE -->
+<div class="mb" id="m-det"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2" id="d-tit">Detalle</div>
+  <div id="d-bod"></div>
+  <div class="gap2" style="margin-top:14px;">
+    <button class="btn btn-out" onclick="cerrarMb('m-det')">Cerrar</button>
+    <button class="btn btn-ve" id="d-abo">💳 Abonar</button>
+  </div>
+  <div class="gap2" style="margin-top:8px;" id="d-btns-admin">
+    <button class="btn btn-ro" id="d-can">🗑 Cancelar crédito</button>
+    <button class="btn btn-wa" id="d-wa">📲 WhatsApp</button>
+  </div>
+  <div class="gap2" style="margin-top:8px;" id="d-btns-cobrador">
+    <button class="btn btn-wa" id="d-wa2" style="grid-column:1/-1;">📲 WhatsApp</button>
+  </div>
+</div></div>
+
+<!-- MODAL WHATSAPP -->
+<div class="mb" id="m-wa"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2" id="wa-tit">📲 Enviar mensaje</div>
+  <div id="wa-prev" style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:10px;padding:14px;margin-bottom:14px;font-size:.85rem;line-height:1.8;color:#1b5e20;white-space:pre-line;"></div>
+  <div class="fg"><label>Número WhatsApp</label><input type="tel" id="wa-tel"></div>
+  <div class="gap2">
+    <button class="btn btn-out" onclick="cerrarMb('m-wa')">Cancelar</button>
+    <button class="btn btn-wa" onclick="acc.enviarWA()">📲 Enviar</button>
+  </div>
+</div></div>
+
+<!-- MODAL RECORDATORIOS -->
+<div class="mb" id="m-rec"><div class="mo">
+  <div class="mh"></div>
+  <div class="mt2">📲 Recordatorios</div>
+  <div id="rec-res" style="border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;line-height:1.8;"></div>
+  <div id="rec-lista"></div>
+  <button class="btn btn-out" style="margin-top:10px;" onclick="cerrarMb('m-rec')">Cerrar</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+// ── FIREBASE CONFIG ───────────────────────────────
+firebase.initializeApp({
+  apiKey:"AIzaSyB_VgdScpsuQd00hiyIKPD4ajcaOHoKa40",
+  authDomain:"jr-cobro-diario.firebaseapp.com",
+  projectId:"jr-cobro-diario",
+  storageBucket:"jr-cobro-diario.firebasestorage.app",
+  messagingSenderId:"310932406902",
+  appId:"1:310932406902:web:e283c30d8e515a33129557"
+});
+const FS   = firebase.firestore();
+const AUTH = firebase.auth();
+const ADMIN_UID = 'Ex7DrqbxvjZ94nYg9ObIuLNyABK2';
+const KEY = 'jrcd_v3';
+
+// ── ESTADO ────────────────────────────────────────
+let DB  = { clientes:[], creditos:[], abonos:[] };
+let ROL = ''; // 'admin' | 'cobrador'
+let UID = '';
+let waMsgActual = '';
+
+// ── HELPERS ───────────────────────────────────────
+const $   = id => document.getElementById(id);
+const fmt = n  => '$'+Math.round(n||0).toLocaleString('es-CO');
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const hoy = () => new Date().toISOString().slice(0,10);
+const diffD = (a,b) => Math.floor((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+const fmtF  = f => { if(!f)return ''; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}); };
+
+function fmtInp(el){
+  const r=el.value.replace(/\D/g,'');
+  el.value=r?parseInt(r).toLocaleString('es-CO'):'';
+}
+function leerVal(id){ return parseFloat(($(id).value||'').replace(/\./g,'').replace(',','.'))||0; }
+
+// ── FESTIVOS ──────────────────────────────────────
+const FEST=new Set([
+  '2025-01-01','2025-01-06','2025-04-17','2025-04-18','2025-05-01',
+  '2025-05-29','2025-06-19','2025-06-23','2025-06-30','2025-07-20',
+  '2025-08-07','2025-08-18','2025-10-13','2025-11-03','2025-11-17',
+  '2025-12-08','2025-12-25',
+  '2026-01-01','2026-01-05','2026-03-23','2026-04-02','2026-04-03',
+  '2026-05-01','2026-05-14','2026-06-04','2026-06-15','2026-06-29',
+  '2026-07-20','2026-08-07','2026-08-17','2026-10-12','2026-11-02',
+  '2026-11-16','2026-12-08','2026-12-25'
+]);
+function esHabil(f){ const d=new Date(f+'T12:00:00'); return d.getDay()!==0&&!FEST.has(f); }
+function diasHabiles(ini,n){
+  const r=[]; let d=new Date(ini+'T12:00:00');
+  while(r.length<n){ const s=d.toISOString().slice(0,10); if(esHabil(s))r.push(s); d.setDate(d.getDate()+1); }
+  return r;
+}
+
+// ── MORA ──────────────────────────────────────────
+function cobrosHechos(cid){ return DB.abonos.filter(a=>a.creditoId===cid).length; }
+function estadoCred(c){
+  const dh=diasHabiles(c.fechaInicio,c.numDias);
+  const pasados=dh.filter(d=>d<=hoy()).length;
+  return pasados>cobrosHechos(c.id)?'rojo':'verde';
+}
+function mora(c){
+  const dh=diasHabiles(c.fechaInicio,c.numDias);
+  const pasados=dh.filter(d=>d<=hoy()).length;
+  return Math.max(0,pasados-cobrosHechos(c.id));
+}
+
+// ── FIREBASE CRUD ─────────────────────────────────
+function bk(){ try{localStorage.setItem(KEY,JSON.stringify(DB));}catch{} }
+function sbSet(msg,t=''){ const e=$('sb');if(e){e.textContent=msg;e.className='sync-bar'+(t?' '+t:'');} }
+
+async function fsSet(col,id,obj){
+  try{ await FS.collection(col).doc(id).set({...obj,_ts:firebase.firestore.FieldValue.serverTimestamp()}); bk(); return true; }
+  catch(e){ console.error(e); bk(); return false; }
+}
+async function fsDel(col,id){
+  try{ await FS.collection(col).doc(id).delete(); bk(); return true; }
+  catch{ bk(); return false; }
+}
+
+async function cargar(){
+  sbSet('🔄 Cargando...');
+  try{
+    const [sc,scr,sa]=await Promise.all([
+      FS.collection('clientes').get(),
+      FS.collection('creditos').get(),
+      FS.collection('abonos').get()
+    ]);
+    DB.clientes=sc.docs.map(d=>({id:d.id,...d.data()}));
+    DB.creditos=scr.docs.map(d=>({id:d.id,...d.data()}));
+    DB.abonos  =sa.docs.map(d=>({id:d.id,...d.data()}));
+    sbSet('✅ Sincronizado','ok'); bk();
+  }catch{
+    sbSet('⚠️ Sin conexión — datos locales','err');
+    try{ const r=localStorage.getItem(KEY); if(r){const b=JSON.parse(r);DB.clientes=b.clientes||[];DB.creditos=b.creditos||[];DB.abonos=b.abonos||[];} }catch{}
+  }
+}
+
+// ── AUTH ──────────────────────────────────────────
+const auth = {
+  async login(){
+    const email=$('log-email').value.trim();
+    const pass =$('log-pass').value;
+    const err  =$('login-err');
+    err.style.display='none';
+    if(!email||!pass){ err.textContent='Completa todos los campos'; err.style.display='block'; return; }
+    try{
+      $('lo').style.display='flex'; $('lo-txt').textContent='Iniciando sesión...';
+      await AUTH.signInWithEmailAndPassword(email,pass);
+    }catch(e){
+      $('lo').style.display='none';
+      err.textContent=e.code==='auth/invalid-credential'?'Correo o contraseña incorrectos':'Error al iniciar sesión';
+      err.style.display='block';
+    }
+  },
+  async logout(){
+    await AUTH.signOut();
+    DB={clientes:[],creditos:[],abonos:[]};
+    ROL='';UID='';
+    $('app').style.display='none';
+    ['scr-pendiente','bnav-admin','bnav-cobrador'].forEach(id=>$(id)&&($(id).style.display='none'));
+    $('scr-login').style.display='flex';
+  }
+};
+
+// Detectar estado auth
+AUTH.onAuthStateChanged(async user=>{
+  if(!user){
+    $('lo').style.display='none';
+    $('scr-login').style.display='flex';
+    return;
+  }
+
+  UID = user.uid;
+  $('lo').style.display='flex';
+  $('lo-txt').textContent='Verificando acceso...';
+
+  // Si es el admin principal — acceso directo sin verificar Firestore
+  if(user.uid === ADMIN_UID){
+    ROL = 'admin';
+    // Guardar/actualizar doc admin en background sin bloquear
+    FS.collection('usuarios').doc(user.uid).set({
+      uid:user.uid, email:user.email,
+      nombre:'Administrador', rol:'admin', aprobado:true
+    },{merge:true}).catch(e=>console.log('Admin doc error:',e));
+    await cargar();
+    mostrarApp();
+    return;
+  }
+
+  // Para cobradores — verificar si está aprobado
+  let aprobado = false;
+  let docExiste = false;
+
+  try{
+    const snap = await FS.collection('usuarios').doc(user.uid).get();
+    docExiste = snap.exists();
+    if(docExiste && snap.data().aprobado === true){
+      aprobado = true;
+      ROL = snap.data().rol || 'cobrador';
+    }
+  }catch(e){
+    console.log('Error leyendo usuario:', e);
+  }
+
+  if(aprobado){
+    // Cobrador aprobado — entrar
+    await cargar();
+    mostrarApp();
+  } else {
+    // No aprobado — guardar solicitud y notificar
+    if(!docExiste){
+      FS.collection('usuarios').doc(user.uid).set({
+        uid:user.uid, email:user.email,
+        nombre:user.email, rol:'cobrador',
+        aprobado:false,
+        solicitadoEn:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{
+        // Notificar Telegram cuando se guarde exitosamente
+        notificarTelegram(user.email);
+        console.log('Solicitud guardada y Telegram notificado');
+      }).catch(e=>{
+        console.log('Error guardando solicitud:', e);
+        // Intentar notificar Telegram de todas formas
+        notificarTelegram(user.email);
+      });
+    } else {
+      // Ya existe el doc pero no aprobado — solo notificar
+      notificarTelegram(user.email);
+    }
+    $('lo').style.display='none';
+    $('pend-email').textContent = user.email;
+    $('scr-pendiente').style.display = 'flex';
+    iniciarAutoVerificacion();
+  }
+});
+
+function mostrarApp(){
+  $('scr-login').style.display='none';
+  $('scr-pendiente').style.display='none';
+  $('lo').style.display='none';
+  $('app').style.display='flex';
+  const esAdmin = ROL==='admin';
+  $('ag-admin').style.display=esAdmin?'grid':'none';
+  $('ag-cobrador').style.display=esAdmin?'none':'grid';
+  $('bnav-admin').style.display=esAdmin?'flex':'none';
+  $('bnav-cobrador').style.display=esAdmin?'none':'flex';
+  $('rol-ind').textContent=esAdmin?'👑 Admin':'🔵 Cobrador';
+  $('rol-ind').className='rol-badge '+(esAdmin?'rol-admin':'rol-cobrador');
+  renders.inicio();
+  if(esAdmin) cargarSolicitudes();
+}
+
+// ── SOLICITUDES (admin) ───────────────────────────
+async function cargarSolicitudes(){
+  if(ROL!=='admin')return;
+  try{
+    const snap=await FS.collection('usuarios').where('aprobado','==',false).get();
+    const pend=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const panel=$('panel-solic');
+    if(pend.length>0){
+      panel.style.display='block';
+      $('solic-cnt').textContent=pend.length;
+      $('solic-lista').innerHTML=pend.map(u=>`
+        <div class="user-item">
+          <div class="user-nombre">${u.nombre||u.email}</div>
+          <div class="user-email">${u.email}</div>
+          <div class="user-btns">
+            <button class="btn-aprobar" onclick="aprobarUsuario('${u.id}','${u.nombre||u.email}')">✅ Aprobar</button>
+            <button class="btn-rechazar" onclick="rechazarUsuario('${u.id}')">❌ Rechazar</button>
+          </div>
+        </div>`).join('');
+    } else panel.style.display='none';
+  }catch{}
+}
+
+async function aprobarUsuario(uid2,nombre){
+  if(!confirm('¿Aprobar acceso a '+nombre+'?'))return;
+  try{
+    await FS.collection('usuarios').doc(uid2).update({aprobado:true, aprobadoEn:firebase.firestore.FieldValue.serverTimestamp()});
+    toast('✅ '+nombre+' aprobado — ya puede ingresar');
+    cargarSolicitudes();
+    renders.usuarios();
+  }catch(e){
+    toast('❌ Error al aprobar');
+    console.error(e);
+  }
+}
+async function rechazarUsuario(uid2){
+  if(!confirm('¿Rechazar este acceso?'))return;
+  await FS.collection('usuarios').doc(uid2).delete();
+  toast('🗑 Solicitud rechazada');
+  cargarSolicitudes();
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────
+const nav={
+  ir(pg,titulo,btn){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    $('page-'+pg).classList.add('active');
+    $('tt').textContent=titulo;
+    if(btn){
+      const bnav=$(ROL==='admin'?'bnav-admin':'bnav-cobrador');
+      bnav.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    if(pg==='inicio'){renders.inicio();if(ROL==='admin')cargarSolicitudes();}
+    if(pg==='creditos')renders.creditos();
+    if(pg==='clientes')renders.clientes();
+    if(pg==='cobros')renders.cobros();
+    if(pg==='usuarios')renders.usuarios();
+  },
+  menu(){
+    const pgs=ROL==='admin'?['inicio','creditos','clientes','cobros','usuarios']:['inicio','creditos','cobros'];
+    const titles={inicio:'Inicio',creditos:'Créditos',clientes:'Clientes',cobros:'Abonos del Día',usuarios:'Cobradores'};
+    const cur=document.querySelector('.page.active')?.id.replace('page-','')||'inicio';
+    const next=pgs[(pgs.indexOf(cur)+1)%pgs.length];
+    nav.ir(next,titles[next]);
+  },
+  sync(){ toast('🔄 Sincronizando...'); cargar().then(renders.inicio); }
+};
+
+// ── RENDERS ───────────────────────────────────────
+const renders={
+  inicio(){
+    const h=hoy();
+    const d=new Date(h+'T12:00:00');
+    $('hoy-txt').textContent=d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const act=DB.creditos.filter(c=>c.estado==='activo');
+    const enMora=act.filter(c=>estadoCred(c)==='rojo');
+    const alDia=act.filter(c=>estadoCred(c)==='verde');
+    const abHoy=DB.abonos.filter(a=>a.fecha===h);
+    const totHoy=abHoy.reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+    const totCob=DB.abonos.reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+    const cartera=act.reduce((s,c)=>s+(c.saldo||0),0);
+    $('s-tot').textContent=act.length;
+    $('s-ald').textContent=alDia.length;
+    $('s-mor').textContent=enMora.length;
+    $('s-hoy').textContent=fmt(totHoy);
+    $('s-car').textContent=fmt(cartera);
+    $('s-cob').textContent=fmt(totCob);
+    // Lista por cobrar
+    const porCobrar=enMora.sort((a,b)=>mora(b)-mora(a));
+    $('pc-cnt').textContent=porCobrar.length;
+    const pc=$('pc-lista');
+    if(!porCobrar.length){
+      pc.innerHTML='<div style="background:#fff;border-radius:12px;padding:14px;text-align:center;color:var(--gt);font-size:.85rem;box-shadow:0 1px 6px rgba(0,0,0,.06);">✅ Todos al día</div>';
+    } else {
+      pc.innerHTML=porCobrar.map(c=>{
+        const m=mora(c);
+        return '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.07);display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="modales.abrirAbono(\''+c.id+'\')">'
+          +'<div class="sem ro"></div>'
+          +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.clienteNombre+'</div>'
+          +'<div style="font-size:.7rem;color:var(--gt);margin-top:2px;">Cuota: '+fmt(c.cuota)+'/día · Mora: '+m+' día'+(m>1?'s':'')+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;">'
+          +'<div style="font-weight:700;font-size:.85rem;color:var(--roc);">'+fmt(c.saldo)+'</div>'
+          +'<button onclick="event.stopPropagation();modales.abrirAbono(\''+c.id+'\')" style="margin-top:3px;background:var(--az);color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;">💳 Abonar</button>'
+          +'</div></div>';
+      }).join('');
+    }
+  },
+
+  creditos(f=''){
+    const el=$('lista-cr');
+    let lista=DB.creditos.filter(c=>c.estado==='activo');
+    if(f)lista=lista.filter(c=>c.clienteNombre.toLowerCase().includes(f.toLowerCase()));
+    if(!lista.length){el.innerHTML='<div class="empty"><div style="font-size:2.5rem;">📋</div><div>Sin créditos activos</div></div>';return;}
+    lista.sort((a,b)=>mora(b)-mora(a));
+    el.innerHTML=lista.map(c=>{
+      const est=estadoCred(c);const m=mora(c);
+      const ch=cobrosHechos(c.id);
+      const pct=Math.min(100,Math.round((ch/c.numDias)*100));
+      const fill=est==='verde'?'var(--vec)':'var(--roc)';
+      return '<div class="cr-item" onclick="modales.verCredito(\''+c.id+'\')"><div class="cr-top">'
+        +'<div class="sem '+est+'"></div>'
+        +'<div class="cr-info"><div class="cr-nom">'+c.clienteNombre+'</div>'
+        +'<div class="cr-sub">Cuota: '+fmt(c.cuota)+'/día · '+ch+'/'+c.numDias+' cobros</div></div>'
+        +'<div class="cr-right"><div class="cr-monto" style="color:'+(est==='rojo'?'var(--roc)':'var(--ne)')+'">'+fmt(c.saldo)+'</div>'
+        +'<span class="badge '+(est==='verde'?'ve':'ro')+'">'+(est==='verde'?'✅ Al día':'🚨 Mora '+m+'d')+'</span></div></div>'
+        +'<div class="cr-prog"><div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--gt);margin-bottom:4px;"><span>'+ch+' cobros</span><span>'+pct+'%</span></div>'
+        +'<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:'+fill+'"></div></div></div></div>';
+    }).join('');
+  },
+
+  clientes(f=''){
+    const el=$('lista-cli');
+    let lista=DB.clientes;
+    if(f)lista=lista.filter(c=>c.nombre.toLowerCase().includes(f.toLowerCase())||c.cedula.includes(f));
+    if(!lista.length){el.innerHTML='<div class="empty"><div style="font-size:2.5rem;">👥</div><div>Sin clientes</div></div>';return;}
+    el.innerHTML=lista.map(c=>{
+      const crs=DB.creditos.filter(x=>x.clienteId===c.id&&x.estado==='activo').length;
+      const ini=c.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+      return '<div class="cr-item" onclick="modales.verCliente(\''+c.id+'\')"><div class="cr-top">'
+        +'<div style="width:38px;height:38px;border-radius:50%;background:var(--az);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;">'+ini+'</div>'
+        +'<div class="cr-info"><div class="cr-nom">'+c.nombre+'</div><div class="cr-sub">CC: '+c.cedula+' · 📞 '+c.tel+'</div></div>'
+        +'<div class="cr-right"><span class="badge '+(crs>0?'am':'ve')+'">'+crs+' crédito'+(crs!==1?'s':'')+'</span></div>'
+        +'</div></div>';
+    }).join('');
+  },
+
+  cobros(){
+    const h=hoy();
+    const d=new Date(h+'T12:00:00');
+    $('abo-fecha').textContent=d.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+    const ahoy=DB.abonos.filter(a=>a.fecha===h);
+    const tot=ahoy.reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+    $('ab-num').textContent=ahoy.length;
+    $('ab-tot').textContent=fmt(tot);
+    $('ab-mor').textContent=DB.creditos.filter(c=>c.estado==='activo'&&mora(c)>=1).length;
+    const el=$('ab-lista');
+    if(!ahoy.length){el.innerHTML='<div style="text-align:center;color:var(--gt);padding:20px;font-size:.85rem;">Sin abonos hoy</div>';return;}
+    el.innerHTML=ahoy.sort((a,b)=>b.id.localeCompare(a.id)).map(a=>`
+      <div class="pago-row">
+        <div><div style="font-size:.85rem;font-weight:600;">${a.clienteNombre}</div><div style="font-size:.72rem;color:var(--gt);">${a.cobrador||'—'}${a.obs?' · '+a.obs:''}</div></div>
+        <div style="font-weight:700;color:var(--vec);">${fmt(a.valor)}</div>
+      </div>`).join('');
+  },
+
+  aboClientes(f=''){
+    const el=$('abo-cli-lista');
+    const act=DB.creditos.filter(c=>c.estado==='activo');
+    let clis=DB.clientes.filter(c=>act.find(cr=>cr.clienteId===c.id));
+    if(f)clis=clis.filter(c=>c.nombre.toLowerCase().includes(f.toLowerCase())||c.cedula.includes(f));
+    if(!clis.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--gt);font-size:.85rem;">Sin clientes con créditos activos</div>';return;}
+    clis.sort((a,b)=>{
+      const ca=act.find(c=>c.clienteId===a.id);
+      const cb=act.find(c=>c.clienteId===b.id);
+      return (mora(cb)||0)-(mora(ca)||0);
+    });
+    el.innerHTML=clis.map(cli=>{
+      const cred=act.find(c=>c.clienteId===cli.id);if(!cred)return '';
+      const m=mora(cred);const em=m>0;
+      return '<div class="cli-abo-item" onclick="modales.seleccionarCred(\''+cred.id+'\')">'
+        +'<div class="sem '+(em?'ro':'ve')+'"></div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+cli.nombre+'</div>'
+        +'<div style="font-size:.72rem;color:var(--gt);margin-top:2px;">📞 '+cli.tel+' · Cuota: '+fmt(cred.cuota)+'/día</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;">'
+        +'<div style="font-weight:700;font-size:.88rem;color:'+(em?'var(--roc)':'var(--ne)')+';">'+fmt(cred.saldo)+'</div>'
+        +'<span class="badge '+(em?'ro':'ve')+'">'+(em?'MORA '+m+'d':'✅ Al día')+'</span>'
+        +'</div></div>';
+    }).join('');
+  },
+
+  async usuarios(){
+    if(ROL!=='admin')return;
+    const el=$('lista-usuarios');
+    el.innerHTML='<div style="text-align:center;color:var(--gt);padding:14px;">Cargando...</div>';
+    try{
+      const snap=await FS.collection('usuarios').get();
+      const todos=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(!todos.length){el.innerHTML='<div style="text-align:center;color:var(--gt);padding:14px;">Sin usuarios</div>';return;}
+      el.innerHTML=todos.map(u=>{
+        const esAdmin2=u.rol==='admin';
+        return '<div class="user-item">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
+          +'<div class="user-nombre">'+( u.nombre||u.email)+'</div>'
+          +'<span class="rol-badge '+(esAdmin2?'rol-admin':'rol-cobrador')+'">'+(esAdmin2?'Admin':'Cobrador')+'</span>'
+          +'</div>'
+          +'<div class="user-email">'+u.email+'</div>'
+          +'<div style="font-size:.72rem;color:'+(u.aprobado?'var(--ve)':'var(--am)')+';margin-top:4px;font-weight:600;">'+(u.aprobado?'✅ Aprobado':'⏳ Pendiente')+'</div>'
+          +(!esAdmin2?'<div class="user-btns" style="margin-top:10px;">'
+            +(u.aprobado
+              ?'<button onclick="cambiarRol(\''+u.id+'\',\''+(esAdmin2?'cobrador':'admin')+'\')" style="background:var(--az);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.78rem;font-weight:600;cursor:pointer;">🔄 Cambiar rol</button>'
+              :'<button class="btn-aprobar" onclick="aprobarUsuario(\''+u.id+'\',\''+( u.nombre||u.email)+'\')">✅ Aprobar</button>')
+            +'<button class="btn-rechazar" onclick="eliminarUsuario(\''+u.id+'\')">🗑 Eliminar</button>'
+            +'</div>':'')
+          +'</div>';
+      }).join('');
+    }catch{ el.innerHTML='<div style="text-align:center;color:var(--gt);padding:14px;">Error al cargar</div>'; }
+  }
+};
+
+async function cambiarRol(uid2,nuevoRol){
+  await FS.collection('usuarios').doc(uid2).update({rol:nuevoRol});
+  toast('✅ Rol actualizado');
+  renders.usuarios();
+}
+async function eliminarUsuario(uid2){
+  if(!confirm('¿Eliminar este usuario?'))return;
+  await FS.collection('usuarios').doc(uid2).delete();
+  toast('🗑 Usuario eliminado');
+  renders.usuarios();
+}
+
+// ── MODALES ───────────────────────────────────────
+function abrirMb(id){ $(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function cerrarMb(id){ $(id).classList.remove('open'); document.body.style.overflow=''; }
+
+function aboVolver(){
+  $('abo-p1').style.display='block';
+  $('abo-p2').style.display='none';
+  $('abo-bus').value='';
+  $('abo-cred-id').value='';
+  renders.aboClientes('');
+}
+
+function calcPrev(){
+  const val=leerVal('cr-val');
+  const pct=parseFloat($('cr-int').value)||20;
+  const dias=parseInt($('cr-dias').value)||24;
+  const el=$('cr-prev');
+  if(val>0){
+    const int2=val*pct/100,tot=val+int2,cuota=tot/dias;
+    el.style.display='block';
+    el.innerHTML='<div class="pv-row"><span>Capital:</span><span>'+fmt(val)+'</span></div>'
+      +'<div class="pv-row"><span>Interés ('+pct+'%):</span><span>'+fmt(int2)+'</span></div>'
+      +'<div class="pv-row"><span>Total a pagar:</span><span>'+fmt(tot)+'</span></div>'
+      +'<div class="pv-row"><span>Días hábiles:</span><span>'+dias+' días</span></div>'
+      +'<div class="pv-row"><span>Cuota diaria:</span><span>'+fmt(cuota)+'</span></div>';
+  } else el.style.display='none';
+}
+
+const modales={
+  abrirCliente(id=''){
+    if(ROL!=='admin'){toast('⛔ Sin permisos para esta acción');return;}
+    const esEdit=!!id;
+    $('t-cli').textContent=esEdit?'✏️ Editar Cliente':'👤 Nuevo Cliente + Crédito';
+    $('c-id').value=id;
+    $('sec-cred').style.display=esEdit?'none':'block';
+    $('btn-cli-save').textContent=esEdit?'💾 Guardar cambios':'💾 Guardar todo';
+    $('btn-cli-save').onclick=esEdit?acc.editarCliente:acc.guardarCliente;
+    if(id){
+      const c=DB.clientes.find(x=>x.id===id);
+      if(c){$('c-nom').value=c.nombre||'';$('c-ced').value=c.cedula||'';$('c-tel').value=c.tel||'';$('c-dir').value=c.dir||'';}
+    } else {
+      ['c-nom','c-ced','c-tel','c-dir','cr-val','cr-obs'].forEach(x=>$(x).value='');
+      $('cr-int').value='20';$('cr-dias').value='24';$('cr-fec').value=hoy();
+      $('cr-prev').style.display='none';
+    }
+    abrirMb('m-cli');
+  },
+
+  abrirAbono(creditoId=''){
+    $('abo-val').value='';$('abo-obs').value='';$('abo-fec').value=hoy();
+    $('abo-cred-info').style.display='none';
+    if(creditoId){
+      $('abo-p1').style.display='none';
+      $('abo-p2').style.display='block';
+      modales.seleccionarCred(creditoId);
+    } else {
+      $('abo-p1').style.display='block';
+      $('abo-p2').style.display='none';
+      $('abo-bus').value='';
+      renders.aboClientes('');
+    }
+    abrirMb('m-abo');
+  },
+
+  seleccionarCred(creditoId){
+    const c=DB.creditos.find(x=>x.id===creditoId);if(!c)return;
+    const cli=DB.clientes.find(x=>x.id===c.clienteId);
+    $('abo-cred-id').value=creditoId;
+    $('abo-sel-nom').textContent=(cli?cli.nombre:c.clienteNombre)+' · '+fmt(c.cuota)+'/día';
+    $('abo-val').value=parseInt(c.cuota).toLocaleString('es-CO');
+    const m=mora(c);const em=m>0;
+    const info=$('abo-cred-info');
+    info.style.display='block';
+    if(em){
+      info.style.cssText='display:block;background:var(--rob);border:1px solid #ffcdd2;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:.8rem;line-height:1.8;color:var(--ro);';
+      info.innerHTML='🚨 <b>MORA '+m+'d</b> · Cuota: <b>'+fmt(c.cuota)+'</b>/día<br>Saldo: <b>'+fmt(c.saldo)+'</b>';
+    } else {
+      info.style.cssText='display:block;background:var(--veb);border:1px solid #c8e6c9;border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:.8rem;line-height:1.8;color:var(--ve);';
+      info.innerHTML='✅ Al día · Cuota: <b>'+fmt(c.cuota)+'</b>/día · Saldo: <b>'+fmt(c.saldo)+'</b> · Vence: '+fmtF(c.fechaVenc);
+    }
+    $('abo-p1').style.display='none';
+    $('abo-p2').style.display='block';
+  },
+
+  verCredito(id){
+    const c=DB.creditos.find(x=>x.id===id);if(!c)return;
+    const abs=DB.abonos.filter(a=>a.creditoId===id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+    const totAbo=abs.reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+    const est=estadoCred(c);const m=mora(c);
+    const ch=cobrosHechos(id);
+    const pct=Math.min(100,Math.round((ch/c.numDias)*100));
+    const dh=diasHabiles(c.fechaInicio,c.numDias);
+    const h=hoy();
+    const calHtml=dh.map((d,i)=>{
+      const pagado=i<ch;const esHoy=d===h;const fut=d>h;
+      let cls='pe';if(pagado)cls='pg';else if(esHoy)cls='hy';else if(!fut)cls='vc';
+      return '<div class="cal-d '+cls+'" title="Día '+(i+1)+': '+fmtF(d)+'">'+(i+1)+'</div>';
+    }).join('');
+    const moraHtml=m>0
+      ?'<div style="background:var(--rob);border:1px solid #ffcdd2;border-radius:10px;padding:12px 14px;margin-bottom:12px;"><div style="font-weight:700;font-size:.85rem;color:var(--ro);margin-bottom:4px;">🚨 EN MORA — '+m+' día'+(m>1?'s':'')+' sin pagar</div></div>'
+      :'<div style="background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:.85rem;color:var(--ve);">✅ AL DÍA</div>';
+    $('d-tit').textContent=c.clienteNombre+(m>0?' 🚨':'');
+    const esAdmin=ROL==='admin';
+    $('d-btns-admin').style.display=esAdmin?'grid':'none';
+    $('d-btns-cobrador').style.display=esAdmin?'none':'grid';
+    $('d-bod').innerHTML=moraHtml
+      +'<div class="det-row"><span class="det-l">Capital</span><span class="det-v">'+fmt(c.capital)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Interés ('+c.pctInteres+'%)</span><span class="det-v">'+fmt(c.interes)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Total acordado</span><span class="det-v">'+fmt(c.total)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Cuota diaria</span><span class="det-v" style="color:var(--az)">'+fmt(c.cuota)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Días hábiles</span><span class="det-v">'+c.numDias+' días</span></div>'
+      +'<div class="det-row"><span class="det-l">Inicio → Vencimiento</span><span class="det-v">'+fmtF(c.fechaInicio)+' → '+fmtF(c.fechaVenc)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Total abonado</span><span class="det-v" style="color:var(--vec)">'+fmt(totAbo)+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Saldo pendiente</span><span class="det-v">'+fmt(c.saldo)+'</span></div>'
+      +'<div class="det-row" style="border:none"><span class="det-l">Avance</span><span class="det-v">'+pct+'% ('+ch+'/'+c.numDias+')</span></div>'
+      +'<div style="height:7px;background:#f0f0f0;border-radius:4px;margin:4px 0 16px;"><div style="height:7px;background:'+(m>0?'var(--roc)':'var(--vec)')+';border-radius:4px;width:'+pct+'%;"></div></div>'
+      +'<div class="sec-title">Calendario de cobros</div>'
+      +'<div class="cal">'+calHtml+'</div>'
+      +'<div style="display:flex;gap:10px;margin-top:8px;font-size:.68rem;">'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--vec);margin-right:3px;"></span>Pagado</span>'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e3f2fd;margin-right:3px;"></span>Pendiente</span>'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--roc);margin-right:3px;"></span>Vencido</span>'
+      +'</div>'
+      +(esAdmin?'<div class="sec-title" style="margin-top:16px;">Historial de abonos</div>'
+        +(!abs.length?'<div style="text-align:center;color:var(--gt);padding:12px;font-size:.85rem;">Sin abonos aún</div>'
+          :abs.map(a=>'<div class="pago-row"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(a.valor)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(a.fecha)+(a.obs?' · '+a.obs:'')+(a.cobrador?' · '+a.cobrador:'')+'</div></div><button style="background:none;border:none;color:#ccc;cursor:pointer;" onclick="acc.eliminarAbono(\''+a.id+'\',\''+id+'\')">✕</button></div>').join(''))
+        :'');
+    $('d-abo').onclick=()=>{ cerrarMb('m-det'); modales.abrirAbono(id); };
+    const waFn=()=>{
+      const msg=m>0
+        ?'Hola '+c.clienteNombre+', tiene '+m+' día'+(m>1?'s':'')+' sin pagar en JR COBRO DIARIO. Cuota: '+fmt(c.cuota)+'/día. Por favor pague para evitar mora adicional. Si ya pagó, omita este mensaje.'
+        :'Hola '+c.clienteNombre+', le recordamos su cuota de '+fmt(c.cuota)+' en JR COBRO DIARIO. Saldo: '+fmt(c.saldo)+'. ¡Gracias!';
+      waMsgActual=msg;
+      $('wa-tit').textContent='📲 Mensaje a '+c.clienteNombre;
+      $('wa-prev').textContent=msg;
+      $('wa-tel').value=c.clienteTel||'';
+      cerrarMb('m-det'); abrirMb('m-wa');
+    };
+    if(esAdmin){
+      $('d-can').onclick=async()=>{
+        if(!confirm('¿Cancelar este crédito?'))return;
+        c.estado='cancelado'; cerrarMb('m-det'); renders.inicio(); renders.creditos();
+        await fsSet('creditos',c.id,c); toast('🗑 Crédito cancelado');
+      };
+      $('d-wa').onclick=waFn;
+    } else {
+      $('d-wa2').onclick=waFn;
+    }
+    abrirMb('m-det');
+  },
+
+  verCliente(id){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    const c=DB.clientes.find(x=>x.id===id);if(!c)return;
+    const crs=DB.creditos.filter(x=>x.clienteId===id);
+    const tAbo=DB.abonos.filter(a=>a.clienteId===id).reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+    $('d-tit').textContent=c.nombre;
+    $('d-btns-admin').style.display='grid';
+    $('d-btns-cobrador').style.display='none';
+    $('d-bod').innerHTML='<div class="det-row"><span class="det-l">Cédula</span><span class="det-v">'+c.cedula+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Celular</span><span class="det-v">'+c.tel+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Dirección</span><span class="det-v">'+(c.dir||'—')+'</span></div>'
+      +'<div class="det-row"><span class="det-l">Créditos activos</span><span class="det-v">'+crs.filter(x=>x.estado==='activo').length+'</span></div>'
+      +'<div class="det-row" style="border:none"><span class="det-l">Total abonado</span><span class="det-v" style="color:var(--vec)">'+fmt(tAbo)+'</span></div>';
+    $('d-abo').onclick=()=>{ cerrarMb('m-det'); modales.abrirAbono(); };
+    $('d-can').textContent='✏️ Editar'; $('d-can').className='btn btn-az';
+    $('d-can').onclick=()=>{ cerrarMb('m-det'); modales.abrirCliente(id); };
+    $('d-wa').onclick=()=>{
+      waMsgActual='Hola '+c.nombre+', le contactamos de JR COBRO DIARIO.';
+      $('wa-tit').textContent='📲 '+c.nombre;
+      $('wa-prev').textContent=waMsgActual;
+      $('wa-tel').value=c.tel||'';
+      cerrarMb('m-det'); abrirMb('m-wa');
+    };
+    abrirMb('m-det');
+  },
+
+  abrirRecordatorios(){
+    const enMora=DB.creditos.filter(c=>c.estado==='activo'&&mora(c)>=1).sort((a,b)=>mora(b)-mora(a));
+    const res=$('rec-res');
+    if(!enMora.length){
+      res.style.cssText='background:var(--veb);border:1px solid #c8e6c9;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.85rem;color:var(--ve);';
+      res.textContent='✅ Todos los clientes están al día.';
+      $('rec-lista').innerHTML='';
+    } else {
+      res.style.cssText='background:var(--amb);border:1px solid #ffcc80;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.85rem;color:var(--am);';
+      res.textContent='🚨 '+enMora.length+' cliente'+(enMora.length>1?'s':'')+' en mora.';
+      window._recList=enMora;
+      $('rec-lista').innerHTML=enMora.map((c,i)=>{
+        const m=mora(c);
+        return '<div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.06);">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+          +'<div style="font-weight:700;font-size:.88rem;">'+c.clienteNombre+'</div>'
+          +'<span class="badge ro">MORA '+m+'d</span></div>'
+          +'<div style="font-size:.72rem;color:var(--gt);margin-bottom:8px;">Cuota: '+fmt(c.cuota)+'/día · 📞 '+(c.clienteTel||'—')+'</div>'
+          +'<button onclick="modales.enviarRecMsg('+i+')" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px;font-size:.82rem;font-weight:700;cursor:pointer;">📲 Enviar mensaje</button>'
+          +'</div>';
+      }).join('');
+    }
+    abrirMb('m-rec');
+  },
+
+  enviarRecMsg(i){
+    const c=window._recList[i];if(!c)return;
+    const m=mora(c);
+    const msg='Hola '+c.clienteNombre+', le informamos que tiene '+m+' día'+(m>1?'s':'')+' sin pagar en JR COBRO DIARIO. Su cuota diaria es de '+fmt(c.cuota)+'. Por favor realice su pago para evitar mora adicional. Si ya pagó, omita este mensaje. 🏪 JR COBRO DIARIO';
+    waMsgActual=msg;
+    $('wa-tit').textContent='🚨 '+c.clienteNombre;
+    $('wa-prev').textContent=msg;
+    $('wa-tel').value=c.clienteTel||'';
+    cerrarMb('m-rec');abrirMb('m-wa');
+  }
+};
+
+// ── ACCIONES ──────────────────────────────────────
+const acc={
+  async guardarCliente(){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    const nom=$('c-nom').value.trim(),ced=$('c-ced').value.trim(),tel=$('c-tel').value.trim();
+    if(!nom){toast('⚠️ Nombre obligatorio');return;}
+    if(!ced){toast('⚠️ Cédula obligatoria');return;}
+    if(!tel){toast('⚠️ Celular obligatorio');return;}
+    const val=leerVal('cr-val');const fi=$('cr-fec').value;
+    if(!val||val<=0){toast('⚠️ Ingresa el valor del crédito');return;}
+    if(!fi){toast('⚠️ Ingresa la fecha de inicio');return;}
+    const cliId=uid();
+    const cli={id:cliId,nombre:nom,cedula:ced,tel,dir:$('c-dir').value.trim(),fecha:hoy(),creadoPor:UID};
+    DB.clientes.push(cli);
+    const pct=parseFloat($('cr-int').value)||20;
+    const dias=parseInt($('cr-dias').value)||24;
+    const int2=val*pct/100,tot=val+int2,cuota=Math.round(tot/dias);
+    const dh=diasHabiles(fi,dias);
+    const cred={id:uid(),clienteId:cliId,clienteNombre:cli.nombre,clienteTel:cli.tel,
+      capital:val,pctInteres:pct,interes:int2,total:tot,cuota,numDias:dias,
+      saldo:tot,fechaInicio:fi,fechaVenc:dh[dh.length-1],
+      obs:$('cr-obs').value.trim(),estado:'activo',creadoPor:UID};
+    DB.creditos.push(cred);
+    cerrarMb('m-cli');renders.inicio();
+    const [ok1,ok2]=await Promise.all([fsSet('clientes',cli.id,cli),fsSet('creditos',cred.id,cred)]);
+    toast((ok1&&ok2)?'✅ Guardado en Firebase · Cuota: '+fmt(cuota)+'/día':'✅ Guardado localmente');
+  },
+
+  async editarCliente(){
+    if(ROL!=='admin'){toast('⛔ Sin permisos');return;}
+    const id=$('c-id').value;
+    const nom=$('c-nom').value.trim(),ced=$('c-ced').value.trim(),tel=$('c-tel').value.trim();
+    if(!nom||!ced||!tel){toast('⚠️ Completa los campos');return;}
+    const c=DB.clientes.find(x=>x.id===id);if(!c)return;
+    c.nombre=nom;c.cedula=ced;c.tel=tel;c.dir=$('c-dir').value.trim();
+    cerrarMb('m-cli');renders.clientes();renders.inicio();
+    const ok=await fsSet('clientes',c.id,c);
+    toast(ok?'✅ Cliente actualizado':'✅ Actualizado localmente');
+  },
+
+  async guardarAbono(){
+    const cid=$('abo-cred-id').value;
+    const val=leerVal('abo-val');
+    if(!cid){toast('⚠️ Selecciona un cliente');return;}
+    if(!val||val<=0){toast('⚠️ Valor inválido');return;}
+    const cred=DB.creditos.find(c=>c.id===cid);if(!cred)return;
+    // Obtener nombre del cobrador actual
+    let nomCobrador='';
+    try{
+      const snap=await FS.collection('usuarios').doc(UID).get();
+      if(snap.exists())nomCobrador=snap.data().nombre||snap.data().email||'';
+    }catch{}
+    const a={id:uid(),creditoId:cid,clienteId:cred.clienteId,clienteNombre:cred.clienteNombre,
+      valor:val,fecha:$('abo-fec').value,obs:$('abo-obs').value.trim(),
+      cobrador:nomCobrador,cobradorUid:UID};
+    DB.abonos.push(a);
+    cred.saldo=Math.max(0,(cred.saldo||0)-val);
+    if(cred.saldo<=0)cred.estado='pagado';
+    cerrarMb('m-abo');renders.inicio();
+    await Promise.all([fsSet('abonos',a.id,a),fsSet('creditos',cred.id,cred)]).catch(()=>bk());
+    toast('✅ Abono registrado');
+  },
+
+  async eliminarAbono(aboId,credId){
+    if(ROL!=='admin'){toast('⛔ Solo el admin puede eliminar');return;}
+    const a=DB.abonos.find(x=>x.id===aboId);
+    const c=DB.creditos.find(x=>x.id===credId);
+    if(!a||!c)return;
+    c.saldo=Math.min(c.total,(c.saldo||0)+(parseFloat(a.valor)||0));
+    if(c.estado==='pagado')c.estado='activo';
+    DB.abonos=DB.abonos.filter(x=>x.id!==aboId);
+    cerrarMb('m-det');renders.inicio();
+    await Promise.all([fsDel('abonos',aboId),fsSet('creditos',c.id,c)]).catch(()=>bk());
+    toast('🗑 Abono eliminado');
+  },
+
+  enviarWA(){
+    const tel=$('wa-tel').value.replace(/\D/g,'');
+    if(!tel){toast('⚠️ Ingresa el número');return;}
+    window.open('https://wa.me/57'+tel+'?text='+encodeURIComponent(waMsgActual),'_blank');
+    cerrarMb('m-wa');
+  }
+};
+
+// ── VERIFICAR APROBACIÓN ─────────────────────────
+let _verInterval = null;
+
+async function verificarAprobacion(){
+  const user = AUTH.currentUser;
+  if(!user) return;
+  const msg = $('pend-msg');
+  if(msg) msg.textContent = '🔄 Verificando...';
+  try{
+    const snap = await FS.collection('usuarios').doc(user.uid).get();
+    if(snap.exists() && snap.data().aprobado === true){
+      // Aprobado — entrar
+      if(_verInterval){ clearInterval(_verInterval); _verInterval=null; }
+      ROL = snap.data().rol || 'cobrador';
+      await cargar();
+      mostrarApp();
+    } else {
+      if(msg) msg.textContent = 'Aún no has sido aprobado. Contacta al administrador.';
+    }
+  }catch(e){
+    if(msg) msg.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+// Auto-verificar cada 15 segundos cuando está en pantalla pendiente
+function iniciarAutoVerificacion(){
+  if(_verInterval) clearInterval(_verInterval);
+  _verInterval = setInterval(()=>{
+    const pend = $('scr-pendiente');
+    if(pend && pend.style.display==='flex'){
+      verificarAprobacion();
+    } else {
+      clearInterval(_verInterval);
+      _verInterval = null;
+    }
+  }, 15000);
+}
+
+// ── TELEGRAM ─────────────────────────────────────
+const TG_TOKEN = '8687200553:AAFF9Nm6B7UzMFKx_OVADODubV8CCUEoqTQ';
+const TG_CHAT  = '5474683392';
+async function notificarTelegram(email){
+  try{
+    const msg = encodeURIComponent('🔔 Nueva solicitud en JR COBRO DIARIO\n\n📧 Correo: '+email+'\n\nEntra a la app para aprobar o rechazar.');
+    const url = 'https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage?chat_id='+TG_CHAT+'&text='+msg;
+    await fetch(url, {mode:'no-cors'});
+    console.log('Telegram notificado');
+  }catch(e){ console.log('Telegram error:',e); }
+}
+
+// TOAST
+let _tt;
+function toast(msg,dur=2500){const e=$('toast');e.textContent=msg;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),dur);}
+
+// Cerrar modales al tocar fondo
+document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)cerrarMb(bg.id);}));
+
+// Enter en login
+$('log-pass').addEventListener('keydown',e=>{if(e.key==='Enter')auth.login();});
+</script>
+</body>
+</html>
