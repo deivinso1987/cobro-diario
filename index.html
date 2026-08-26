@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v40</title>
+<title>JR COBRO DIARIO v41</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -338,16 +338,20 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div style="background:#e3f2fd;border-radius:10px;padding:12px;text-align:center;">
           <div style="font-size:1.1rem;font-weight:700;color:var(--az);" id="res-tot-mes">$0</div>
-          <div style="font-size:.7rem;color:var(--gt);">Total del mes</div>
+          <div style="font-size:.7rem;color:var(--gt);" id="res-tot-mes-lbl">Total del mes</div>
         </div>
         <div style="background:var(--veb);border-radius:10px;padding:12px;text-align:center;">
           <div style="font-size:1.1rem;font-weight:700;color:var(--ve);" id="res-dias-con">0</div>
-          <div style="font-size:.7rem;color:var(--gt);">Días con cobros</div>
+          <div style="font-size:.7rem;color:var(--gt);" id="res-dias-con-lbl">Días con cobros</div>
         </div>
       </div>
     </div>
+    <div class="r2" style="margin-bottom:10px;">
+      <button id="res-btn-cobros" onclick="renders.resumen('cobros')" style="background:var(--az);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.82rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">📥 Cobros</button>
+      <button id="res-btn-creditos" onclick="renders.resumen('creditos')" style="background:#e0e0e0;color:var(--gt);border:none;border-radius:9px;padding:10px;font-size:.82rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">📋 Créditos nuevos</button>
+    </div>
     <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-      <div class="sec-title">Cobros día a día</div>
+      <div class="sec-title" id="res-tabla-title">Cobros día a día</div>
       <div id="res-tabla"></div>
     </div>
   </div>
@@ -1075,11 +1079,63 @@ const renders={
     ruta._lista=lista;
   },
 
-  resumen(){
+  resumen(vista){
+    if(vista) window._resVista = vista;
+    vista = window._resVista || 'cobros';
+    $('res-btn-cobros').style.background   = vista==='cobros'  ?'var(--az)':'#e0e0e0';
+    $('res-btn-cobros').style.color        = vista==='cobros'  ?'#fff':'var(--gt)';
+    $('res-btn-creditos').style.background = vista==='creditos'?'var(--az)':'#e0e0e0';
+    $('res-btn-creditos').style.color      = vista==='creditos'?'#fff':'var(--gt)';
+
     const mes  = parseInt($('res-mes').value);
     const anio = parseInt($('res-anio').value);
-    // Filtrar abonos del mes/año seleccionado
     const prefix = anio+'-'+(mes+1<10?'0':'')+(mes+1);
+    const el=$('res-tabla');
+
+    if(vista==='creditos'){
+      $('res-tabla-title').textContent='Créditos nuevos día a día';
+      $('res-tot-mes-lbl').textContent='Prestado en el mes';
+      $('res-dias-con-lbl').textContent='Días con créditos';
+      const credMes = DB.creditos.filter(c=>c.fechaInicio&&c.fechaInicio.startsWith(prefix));
+      const porDia = {};
+      credMes.forEach(c=>{
+        if(!porDia[c.fechaInicio]) porDia[c.fechaInicio]={total:0,count:0,detalle:[]};
+        porDia[c.fechaInicio].total += parseFloat(c.capital)||0;
+        porDia[c.fechaInicio].count += 1;
+        porDia[c.fechaInicio].detalle.push(c);
+      });
+      const dias = Object.keys(porDia).sort();
+      const totMes = dias.reduce((s,d)=>s+porDia[d].total,0);
+      $('res-tot-mes').textContent  = fmt(totMes);
+      $('res-dias-con').textContent = dias.length;
+      if(!dias.length){
+        el.innerHTML='<div style="text-align:center;color:var(--gt);padding:24px;font-size:.85rem;">Sin créditos nuevos en este período</div>';
+        return;
+      }
+      el.innerHTML = dias.map(d=>{
+        const info = porDia[d];
+        const fecha = new Date(d+'T05:00:00Z');
+        const diaLabel = fecha.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'});
+        return '<div style="border-bottom:1px solid #f0f0f0;">'
+          +'<div onclick="toggleDia(this)" style="display:flex;justify-content:space-between;align-items:center;padding:11px 4px;cursor:pointer;">'
+          +'<div><div style="font-weight:600;font-size:.88rem;">'+diaLabel+'</div>'
+          +'<div style="font-size:.7rem;color:var(--gt);">'+info.count+' crédito'+(info.count>1?'s':'')+'</div></div>'
+          +'<div style="font-weight:700;color:var(--az);font-size:.9rem;">'+fmt(info.total)+'</div>'
+          +'</div>'
+          +'<div style="display:none;padding:0 4px 10px;">'
+          +info.detalle.map(c=>'<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:4px 0;color:var(--gt);border-bottom:1px dashed #f0f0f0;">'
+            +'<span>'+c.clienteNombre+' · '+c.numDias+' días</span>'
+            +'<span style="font-weight:600;color:var(--ne);">'+fmt(c.capital)+'</span></div>').join('')
+          +'</div>'
+          +'</div>';
+      }).join('');
+      return;
+    }
+
+    $('res-tabla-title').textContent='Cobros día a día';
+    $('res-tot-mes-lbl').textContent='Total del mes';
+    $('res-dias-con-lbl').textContent='Días con cobros';
+    // Filtrar abonos del mes/año seleccionado
     const abosMes = DB.abonos.filter(a=>a.fecha&&a.fecha.startsWith(prefix));
     // Agrupar por día
     const porDia = {};
@@ -1093,7 +1149,6 @@ const renders={
     const totMes = dias.reduce((s,d)=>s+porDia[d].total,0);
     $('res-tot-mes').textContent  = fmt(totMes);
     $('res-dias-con').textContent = dias.length;
-    const el=$('res-tabla');
     if(!dias.length){
       el.innerHTML='<div style="text-align:center;color:var(--gt);padding:24px;font-size:.85rem;">Sin cobros en este período</div>';
       return;
