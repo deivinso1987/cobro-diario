@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v42</title>
+<title>JR COBRO DIARIO v43</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1994,9 +1994,15 @@ const caja = {
     // Total cobrado (todos los abonos)
     const totalCobrado = DB.abonos.reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
 
-    // Capital reinvertido = capital de créditos activos
-    const act = DB.creditos.filter(c=>c.estado==='activo');
-    const capitalReinvertido = act.reduce((s,c)=>s+(parseFloat(c.capital)||0),0);
+    // Capital reinvertido = saldo de capital AÚN sin recuperar de cada crédito
+    // (capital del crédito menos sus propios abonos, sin bajar de 0).
+    // Así el capital vuelve a caja poco a poco con cada abono, no de golpe
+    // el día que el crédito se marca "pagado".
+    const capitalReinvertido = DB.creditos.reduce((s,c)=>{
+      const abonadoEsteCredito = DB.abonos.filter(a=>a.creditoId===c.id).reduce((t,a)=>t+(parseFloat(a.valor)||0),0);
+      const saldoCapital = Math.max(0, (parseFloat(c.capital)||0) - abonadoEsteCredito);
+      return s + saldoCapital;
+    },0);
 
     // Total retiros
     const totalRetiros = retiros.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
