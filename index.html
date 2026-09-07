@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v44</title>
+<title>JR COBRO DIARIO v45</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1624,6 +1624,15 @@ const acc={
     if(!cid){toast('⚠️ Selecciona un cliente');return;}
     if(!val||val<=0){toast('⚠️ Valor inválido');return;}
     const cred=DB.creditos.find(c=>c.id===cid);if(!cred)return;
+    const fechaAbono=$('abo-fec').value;
+    // Los cobradores no pueden registrar dos abonos el mismo día para el mismo crédito
+    if(ROL!=='admin'){
+      const yaTieneAbonoHoy = DB.abonos.some(a=>a.creditoId===cid&&a.fecha===fechaAbono);
+      if(yaTieneAbonoHoy){
+        toast('⛔ Este crédito ya tiene un abono registrado ese día. Solo un admin puede agregar otro.');
+        return;
+      }
+    }
     // Obtener nombre del cobrador actual
     let nomCobrador='';
     try{
@@ -1631,7 +1640,7 @@ const acc={
       if(snap.exists)nomCobrador=snap.data().nombre||snap.data().email||'';
     }catch{}
     const a={id:uid(),creditoId:cid,clienteId:cred.clienteId,clienteNombre:cred.clienteNombre,
-      valor:val,fecha:$('abo-fec').value,obs:$('abo-obs').value.trim(),
+      valor:val,fecha:fechaAbono,obs:$('abo-obs').value.trim(),
       cobrador:nomCobrador,cobradorUid:UID};
     DB.abonos.push(a);
     // Recalcular saldo desde cero usando todos los abonos reales
