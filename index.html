@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v45</title>
+<title>JR COBRO DIARIO v46</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1440,10 +1440,9 @@ const modales={
       +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e3f2fd;margin-right:3px;"></span>Pendiente</span>'
       +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--roc);margin-right:3px;"></span>Vencido</span>'
       +'</div>'
-      +(esAdmin?'<div class="sec-title" style="margin-top:16px;">Historial de abonos</div>'
+      +'<div class="sec-title" style="margin-top:16px;">Historial de abonos</div>'
         +(!abs.length?'<div style="text-align:center;color:var(--gt);padding:12px;font-size:.85rem;">Sin abonos aún</div>'
-          :abs.map(a=>'<div class="pago-row"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(a.valor)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(a.fecha)+(a.obs?' · '+a.obs:'')+(a.cobrador?' · '+a.cobrador:'')+'</div></div><button style="background:none;border:none;color:#ccc;cursor:pointer;" onclick="acc.eliminarAbono(\''+a.id+'\',\''+id+'\')">✕</button></div>').join(''))
-        :'');
+          :abs.map(a=>'<div class="pago-row"><div><div style="font-size:.85rem;font-weight:600;">'+fmt(a.valor)+'</div><div style="font-size:.72rem;color:var(--gt);">'+fmtF(a.fecha)+(a.obs?' · '+a.obs:'')+(a.cobrador?' · '+a.cobrador:'')+'</div></div>'+(esAdmin?'<button style="background:none;border:none;color:#ccc;cursor:pointer;" onclick="acc.eliminarAbono(\''+a.id+'\',\''+id+'\')">✕</button>':'')+'</div>').join(''));
     $('d-abo').onclick=()=>{ cerrarMb('m-det'); modales.abrirAbono(id); };
     // Mostrar editar nombre si está vacío o si es admin
     const editNom=$('d-edit-nom');
