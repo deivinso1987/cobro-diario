@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v46</title>
+<title>JR COBRO DIARIO v47</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1374,6 +1374,13 @@ const modales={
   },
 
   abrirNuevoCredito(cliId, nombre, tel){
+    if(ROL!=='admin'){
+      const credVencido = DB.creditos.find(c=>c.clienteId===cliId && c.estado==='activo' && c.fechaVenc<hoy() && mora(c)>=1);
+      if(credVencido){
+        toast('⛔ Este cliente tiene un crédito vencido y en mora. Solo un administrador puede crear un nuevo crédito o refinanciación.');
+        return;
+      }
+    }
     $('ncred-cli-id').value = cliId;
     $('ncred-cli-info').textContent = '👤 '+nombre+(tel?' · 📞 '+tel:'');
     $('ncred-val').value='';
@@ -1676,6 +1683,14 @@ const acc={
     if(!fi){toast('⚠️ Ingresa la fecha de inicio');return;}
     const cli=DB.clientes.find(c=>c.id===cliId);
     if(!cli){toast('⚠️ Cliente no encontrado');return;}
+    if(ROL!=='admin'){
+      const credVencido = DB.creditos.find(c=>c.clienteId===cliId && c.estado==='activo' && c.fechaVenc<hoy() && mora(c)>=1);
+      if(credVencido){
+        toast('⛔ Este cliente tiene un crédito vencido y en mora. Solo un administrador puede crear un nuevo crédito o refinanciación.');
+        cerrarMb('m-ncred');
+        return;
+      }
+    }
     const pct=parseFloat($('ncred-int').value)||20;
     const dias=parseInt($('ncred-dias').value)||24;
     const int2=val*pct/100,tot=val+int2,cuota=Math.round(tot/dias);
