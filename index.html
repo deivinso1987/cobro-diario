@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v47</title>
+<title>JR COBRO DIARIO v48</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -278,7 +278,11 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
   <!-- CRÉDITOS -->
   <div class="page" id="page-creditos">
     <div class="sw" style="margin-top:8px;"><span class="sw-ic">🔍</span><input type="text" placeholder="Buscar cliente..." oninput="renders.creditos(this.value)"></div>
-    <div class="sec-title">Créditos activos</div>
+    <div class="r2" style="margin:10px 0;">
+      <button id="cr-btn-activos" onclick="renders.creditos('','activos')" style="background:var(--az);color:#fff;border:none;border-radius:9px;padding:10px;font-size:.82rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">📋 Activos</button>
+      <button id="cr-btn-finalizados" onclick="renders.creditos('','finalizados')" style="background:#e0e0e0;color:var(--gt);border:none;border-radius:9px;padding:10px;font-size:.82rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">📁 Finalizados</button>
+    </div>
+    <div class="sec-title" id="cr-lista-title">Créditos activos</div>
     <div id="lista-cr"></div>
   </div>
 
@@ -606,6 +610,7 @@ let DB  = { clientes:[], creditos:[], abonos:[] };
 let ROL = ''; // 'admin' | 'cobrador'
 let UID = '';
 let waMsgActual = '';
+let crVista = 'activos'; // 'activos' | 'finalizados' — vista actual de la pantalla Créditos
 
 // ── HELPERS ───────────────────────────────────────
 const $   = id => document.getElementById(id);
@@ -997,13 +1002,39 @@ const renders={
     }
   },
 
-  creditos(f=''){
+  creditos(f='',vista){
+    if(vista) crVista = vista;
     const el=$('lista-cr');
-    // Si hay búsqueda, incluir también pagados y cancelados
-    let lista = f
-      ? DB.creditos.filter(c=>c.clienteNombre&&c.clienteNombre.toLowerCase().includes(f.toLowerCase()))
+    const btnA=$('cr-btn-activos'),btnF=$('cr-btn-finalizados'),tit=$('cr-lista-title');
+    if(btnA&&btnF&&tit){
+      btnA.style.background = crVista==='activos'?'var(--az)':'#e0e0e0';
+      btnA.style.color      = crVista==='activos'?'#fff':'var(--gt)';
+      btnF.style.background = crVista==='finalizados'?'var(--az)':'#e0e0e0';
+      btnF.style.color      = crVista==='finalizados'?'#fff':'var(--gt)';
+      tit.textContent = crVista==='activos'?'Créditos activos':'Créditos finalizados';
+    }
+    const base = crVista==='finalizados'
+      ? DB.creditos.filter(c=>c.estado==='pagado'||c.estado==='cancelado')
       : DB.creditos.filter(c=>c.estado==='activo');
-    if(!lista.length){el.innerHTML='<div class="empty"><div style="font-size:2.5rem;">📋</div><div>Sin créditos activos</div></div>';return;}
+    let lista = f
+      ? base.filter(c=>c.clienteNombre&&c.clienteNombre.toLowerCase().includes(f.toLowerCase()))
+      : base;
+    if(!lista.length){el.innerHTML='<div class="empty"><div style="font-size:2.5rem;">📋</div><div>Sin créditos '+(crVista==='finalizados'?'finalizados':'activos')+'</div></div>';return;}
+    if(crVista==='finalizados'){
+      lista.sort((a,b)=>(b.fechaVenc||'').localeCompare(a.fechaVenc||''));
+      el.innerHTML=lista.map(c=>{
+        const ch=cobrosHechos(c.id);
+        const esPagado=c.estado==='pagado';
+        return '<div class="cr-item" onclick="modales.verCredito(\''+c.id+'\')"><div class="cr-top">'
+          +'<div class="sem '+(esPagado?'ve':'gt')+'" style="flex-shrink:0;min-width:13px;background:'+(esPagado?'var(--vec)':'#bbb')+';"></div>'
+          +'<div class="cr-info"><div class="cr-nom">'+c.clienteNombre+'</div>'
+          +'<div class="cr-sub">Cuota: '+fmt(c.cuota)+'/día · '+ch+'/'+c.numDias+' cobros</div></div>'
+          +'<div class="cr-right"><div class="cr-monto" style="color:var(--gt);">'+fmt(c.total)+'</div>'
+          +'<span class="badge '+(esPagado?'ve':'gt')+'" style="background:'+(esPagado?'var(--veb)':'#eee')+';color:'+(esPagado?'var(--ve)':'#777')+';">'+(esPagado?'✅ Pagado':'🚫 Cancelado')+'</span></div></div>'
+          +'</div>';
+      }).join('');
+      return;
+    }
     lista.sort((a,b)=>mora(b)-mora(a));
     el.innerHTML=lista.map(c=>{
       const est=estadoCred(c);const m=mora(c);
@@ -1186,10 +1217,14 @@ const renders={
     $('ab-mor').textContent=DB.creditos.filter(c=>c.estado==='activo'&&mora(c)>=1).length;
     const el=$('ab-lista');
     if(!ahoy.length){el.innerHTML='<div style="text-align:center;color:var(--gt);padding:20px;font-size:.85rem;">Sin abonos hoy</div>';return;}
+    const esAdminHoy=ROL==='admin';
     el.innerHTML=ahoy.sort((a,b)=>b.id.localeCompare(a.id)).map(a=>`
       <div class="pago-row">
         <div><div style="font-size:.85rem;font-weight:600;">${a.clienteNombre}</div><div style="font-size:.72rem;color:var(--gt);">${a.obs||''}${a.cobrador?' · '+a.cobrador:''}</div></div>
-        <div style="font-weight:700;color:var(--vec);">${fmt(a.valor)}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-weight:700;color:var(--vec);">${fmt(a.valor)}</div>
+          ${esAdminHoy?`<button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="acc.eliminarAbono('${a.id}','${a.creditoId}')">✕</button>`:''}
+        </div>
       </div>`).join('');
   },
 
@@ -1669,7 +1704,7 @@ const acc={
     c.saldo=Math.min(c.total,(c.saldo||0)+(parseFloat(a.valor)||0));
     if(c.estado==='pagado')c.estado='activo';
     DB.abonos=DB.abonos.filter(x=>x.id!==aboId);
-    cerrarMb('m-det');renders.inicio();
+    cerrarMb('m-det');renders.inicio();renders.cobros();renders.creditos();
     await Promise.all([fsDel('abonos',aboId),fsSet('creditos',c.id,c)]).catch(()=>bk());
     toast('🗑 Abono eliminado');
   },
