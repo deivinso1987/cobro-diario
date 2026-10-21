@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v49</title>
+<title>JR COBRO DIARIO v50</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -668,6 +668,22 @@ function estadoCred(c){
   const pasados=dh.filter(d=>d<=hoy()).length;
   return pasados>cobrosHechos(c.id)?'rojo':'verde';
 }
+// Crédito con saldo pendiente después de su fecha final (aunque ya esté saldado hoy)
+function creditoTardio(c){
+  if(!c||c.estado==='cancelado')return false;
+  const dh=diasHabiles(c.fechaInicio,c.numDias||24);
+  const venc=c.fechaVenc||dh[dh.length-1];
+  if(hoy()<=venc)return false;
+  const aboVenc=DB.abonos.filter(a=>a.creditoId===c.id&&a.fecha<=venc).reduce((s,a)=>s+(parseFloat(a.valor)||0),0);
+  return aboVenc < (parseFloat(c.total)||0) - (c.numDias||24)*0.5;
+}
+// Si el cliente tuvo saldo pendiente tras la fecha final de su último crédito, solo un admin puede darle otro
+function bloqueoSoloAdmin(cliId){
+  if(ROL==='admin')return null;
+  const crs=DB.creditos.filter(x=>x.clienteId===cliId&&x.estado!=='cancelado').sort((a,b)=>(b.fechaInicio||'').localeCompare(a.fechaInicio||''));
+  return (crs.length&&creditoTardio(crs[0]))?crs[0]:null;
+}
+const MSG_SOLO_ADMIN='⛔ Este cliente tuvo saldo pendiente después de la fecha final de su crédito anterior. Solo un administrador puede crear un nuevo crédito o refinanciación.';
 function mora(c){
   const dh=diasHabiles(c.fechaInicio,c.numDias);
   const pasados=dh.filter(d=>d<=hoy()).length;
@@ -1414,13 +1430,7 @@ const modales={
       toast('⛔ Este cliente tiene un crédito con saldo pendiente de '+fmt(credPendiente.saldo)+'. Debe saldarlo por completo antes de crear un nuevo crédito o refinanciación.');
       return;
     }
-    if(ROL!=='admin'){
-      const credVencido = DB.creditos.find(c=>c.clienteId===cliId && c.estado==='activo' && c.fechaVenc<hoy() && mora(c)>=1);
-      if(credVencido){
-        toast('⛔ Este cliente tiene un crédito vencido y en mora. Solo un administrador puede crear un nuevo crédito o refinanciación.');
-        return;
-      }
-    }
+    if(bloqueoSoloAdmin(cliId)){ toast(MSG_SOLO_ADMIN); return; }
     $('ncred-cli-id').value = cliId;
     $('ncred-cli-info').textContent = '👤 '+nombre+(tel?' · 📞 '+tel:'');
     $('ncred-val').value='';
@@ -1729,14 +1739,7 @@ const acc={
       cerrarMb('m-ncred');
       return;
     }
-    if(ROL!=='admin'){
-      const credVencido = DB.creditos.find(c=>c.clienteId===cliId && c.estado==='activo' && c.fechaVenc<hoy() && mora(c)>=1);
-      if(credVencido){
-        toast('⛔ Este cliente tiene un crédito vencido y en mora. Solo un administrador puede crear un nuevo crédito o refinanciación.');
-        cerrarMb('m-ncred');
-        return;
-      }
-    }
+    if(bloqueoSoloAdmin(cliId)){ toast(MSG_SOLO_ADMIN); cerrarMb('m-ncred'); return; }
     const pct=parseFloat($('ncred-int').value)||20;
     const dias=parseInt($('ncred-dias').value)||24;
     const int2=val*pct/100,tot=val+int2,cuota=Math.round(tot/dias);
