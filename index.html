@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v50</title>
+<title>JR COBRO DIARIO v51</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -242,12 +242,14 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <button class="ab ve" onclick="modales.abrirAbono()">💳 Registrar Abono</button>
       <button class="ab" onclick="nav.ir('cobros','Abonos del Día')">📄 Abonos del Día</button>
       <button class="ab" onclick="nav.ir('creditos','Créditos')">📋 Ver Créditos</button>
+      <button class="ab" onclick="nav.ir('nopagos','🚫 Historial No Pago')">🚫 Historial No Pago</button>
     </div>
     <div class="ag" id="ag-cobrador" style="display:none;">
       <button class="ab" onclick="modales.abrirCliente()">👤 Nuevo Cliente</button>
       <button class="ab ve" onclick="modales.abrirAbono()">💳 Registrar Abono</button>
       <button class="ab" onclick="nav.ir('cobros','Abonos del Día')">📄 Abonos del Día</button>
       <button class="ab" onclick="nav.ir('creditos','Créditos')">📋 Ver Créditos</button>
+      <button class="ab" onclick="nav.ir('nopagos','🚫 Historial No Pago')">🚫 Historial No Pago</button>
     </div>
     <!-- Solicitudes pendientes (solo admin) -->
     <div id="panel-solic" style="display:none;background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;">
@@ -260,6 +262,7 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
       <span id="pc-cnt" style="background:var(--az);color:#fff;border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700;">0</span>
     </div>
     <div id="pc-lista" style="margin-bottom:14px;overflow:hidden;"></div>
+    <div id="np-hoy"></div>
     <button onclick="modales.abrirRecordatorios()" style="width:100%;background:#25d366;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;margin-bottom:14px;">📲 Enviar Recordatorios</button>
   </div>
 
@@ -284,6 +287,20 @@ body{font-family:'Inter',sans-serif;color:var(--ne);display:flex;flex-direction:
     </div>
     <div class="sec-title" id="cr-lista-title">Créditos activos</div>
     <div id="lista-cr"></div>
+  </div>
+
+  <!-- HISTORIAL NO PAGO -->
+  <div class="page" id="page-nopagos">
+    <div class="sw" style="margin-top:8px;"><span class="sw-ic">🔍</span><input type="text" id="np-bus" placeholder="Buscar cliente..." oninput="renders.nopagos()"></div>
+    <div class="r2" style="margin:10px 0;">
+      <select id="np-mes" onchange="renders.nopagos()"></select>
+      <select id="np-anio" onchange="renders.nopagos()"></select>
+    </div>
+    <div id="np-resumen" style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;"></div>
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+      <div class="sec-title">Detalle</div>
+      <div id="np-lista"></div>
+    </div>
   </div>
 
   <!-- CLIENTES (solo admin) -->
@@ -606,7 +623,7 @@ const ADMIN_UID = 'Ex7DrqbxvjZ94nYg9ObIuLNyABK2';
 const KEY = 'jrcd_v3';
 
 // ── ESTADO ────────────────────────────────────────
-let DB  = { clientes:[], creditos:[], abonos:[] };
+let DB  = { clientes:[], creditos:[], abonos:[], nopagos:[] };
 let ROL = ''; // 'admin' | 'cobrador'
 let UID = '';
 let waMsgActual = '';
@@ -668,6 +685,8 @@ function estadoCred(c){
   const pasados=dh.filter(d=>d<=hoy()).length;
   return pasados>cobrosHechos(c.id)?'rojo':'verde';
 }
+// ── NO PAGO ───────────────────────────────────────
+function noPagoHoy(cid){ const h=hoy(); return (DB.nopagos||[]).find(n=>n.creditoId===cid&&n.fecha===h); }
 // Crédito con saldo pendiente después de su fecha final (aunque ya esté saldado hoy)
 function creditoTardio(c){
   if(!c||c.estado==='cancelado')return false;
@@ -714,10 +733,12 @@ async function cargar(){
     DB.clientes=sc.docs.map(d=>({id:d.id,...d.data()}));
     DB.creditos=scr.docs.map(d=>({id:d.id,...d.data()}));
     DB.abonos  =sa.docs.map(d=>({id:d.id,...d.data()}));
+    try{ const snp=await FS.collection('nopagos').get(); DB.nopagos=snp.docs.map(d=>({id:d.id,...d.data()})); }
+    catch(e){ console.log('nopagos no disponible:',e); DB.nopagos=DB.nopagos||[]; }
     sbSet('✅ Sincronizado','ok'); bk();
   }catch{
     sbSet('⚠️ Sin conexión — datos locales','err');
-    try{ const r=localStorage.getItem(KEY); if(r){const b=JSON.parse(r);DB.clientes=b.clientes||[];DB.creditos=b.creditos||[];DB.abonos=b.abonos||[];} }catch{}
+    try{ const r=localStorage.getItem(KEY); if(r){const b=JSON.parse(r);DB.clientes=b.clientes||[];DB.creditos=b.creditos||[];DB.abonos=b.abonos||[];DB.nopagos=b.nopagos||[];} }catch{}
   }
 }
 
@@ -740,7 +761,7 @@ const auth = {
   },
   async logout(){
     await AUTH.signOut();
-    DB={clientes:[],creditos:[],abonos:[]};
+    DB={clientes:[],creditos:[],abonos:[],nopagos:[]};
     ROL='';UID='';
     $('app').style.display='none';
     ['scr-pendiente','bnav-admin','bnav-cobrador'].forEach(id=>$(id)&&($(id).style.display='none'));
@@ -924,6 +945,17 @@ const nav={
     if(pg==='creditos')renders.creditos();
     if(pg==='clientes')renders.clientes();
     if(pg==='cobros')  renders.cobros();
+    if(pg==='nopagos'){
+      const bog=new Date(new Date().getTime()-5*60*60*1000);
+      if($('np-mes')&&!$('np-mes').options.length){
+        const ms=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        $('np-mes').innerHTML=ms.map((m,i)=>'<option value="'+i+'">'+m+'</option>').join('');
+        let ya='';for(let y=2025;y<=2030;y++)ya+='<option value="'+y+'">'+y+'</option>';
+        $('np-anio').innerHTML=ya;
+      }
+      $('np-mes').value=bog.getMonth(); $('np-anio').value=bog.getFullYear();
+      renders.nopagos();
+    }
     if(pg==='usuarios')renders.usuarios();
     if(pg==='resumen'){
       const bog=new Date(new Date().getTime()-5*60*60*1000);
@@ -990,7 +1022,7 @@ const renders={
     // Lista por cobrar
     const abonosHoyIds=new Set(DB.abonos.filter(a=>a.fecha===h).map(a=>a.creditoId));
     const diasHabilesHoy=act.filter(c=>{const dh=diasHabiles(c.fechaInicio,c.numDias);return dh.includes(h)||mora(c)>=1;});
-    const pendientes=diasHabilesHoy.filter(c=>!abonosHoyIds.has(c.id));
+    const pendientes=diasHabilesHoy.filter(c=>!abonosHoyIds.has(c.id)&&!noPagoHoy(c.id));
     // Aplicar orden de ruta si existe
     let ordenRuta=[];
     try{ const s=localStorage.getItem('jrcd_ruta_orden'); if(s) ordenRuta=JSON.parse(s); }catch{}
@@ -1013,8 +1045,21 @@ const renders={
     } else {
       pc.innerHTML=porCobrar.map(c=>{
         const m=mora(c);
-        return '<div class="pc-item" onclick="modales.abrirAbono(\''+c.id+'\')" style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.07);display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;overflow:hidden;">'          +'<div class="sem '+(mora(c)>12?'ro':(mora(c)>5?'mo':'ve'))+'" style="flex-shrink:0;"></div>'          +'<div style="flex:1;min-width:0;overflow:hidden;">'          +'<div style="font-weight:700;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(c.clienteNombre||'Sin nombre')+'</div>'          +'<div style="font-size:.7rem;color:var(--gt);margin-top:2px;">Cuota: '+fmt(c.cuota)+'/día'+(m>0?' · Mora: '+m+'d':'')+'</div>'          +'</div>'          +'<div style="text-align:right;flex-shrink:0;min-width:80px;">'          +'<div style="font-weight:700;font-size:.85rem;color:'+(mora(c)>12?'var(--roc)':(mora(c)>5?'#7b1fa2':'var(--ne)'))+';">'+fmt(c.saldo)+'</div>'          +'<button onclick="event.stopPropagation();modales.abrirAbono(\''+c.id+'\')" style="margin-top:3px;background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap;">💳 Abonar</button>'          +'</div></div>';
+        return '<div class="pc-item" onclick="modales.abrirAbono(\''+c.id+'\')" style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.07);display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;overflow:hidden;">'          +'<div class="sem '+(mora(c)>12?'ro':(mora(c)>5?'mo':'ve'))+'" style="flex-shrink:0;"></div>'          +'<div style="flex:1;min-width:0;overflow:hidden;">'          +'<div style="font-weight:700;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(c.clienteNombre||'Sin nombre')+'</div>'          +'<div style="font-size:.7rem;color:var(--gt);margin-top:2px;">Cuota: '+fmt(c.cuota)+'/día'+(m>0?' · Mora: '+m+'d':'')+'</div>'          +'</div>'          +'<div style="text-align:right;flex-shrink:0;min-width:80px;">'          +'<div style="font-weight:700;font-size:.85rem;color:'+(mora(c)>12?'var(--roc)':(mora(c)>5?'#7b1fa2':'var(--ne)'))+';">'+fmt(c.saldo)+'</div>'          +'<div style="display:flex;gap:4px;justify-content:flex-end;margin-top:3px;">'          +'<button onclick="event.stopPropagation();acc.marcarNoPago(\''+c.id+'\')" style="background:#fff;color:var(--roc);border:1px solid var(--roc);border-radius:7px;padding:5px 8px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap;">🚫 No pagó</button>'          +'<button onclick="event.stopPropagation();modales.abrirAbono(\''+c.id+'\')" style="background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap;">💳 Abonar</button>'          +'</div>'          +'</div></div>';
       }).join('');
+    }
+    // Sección: no pagaron hoy
+    const npHoy=(DB.nopagos||[]).filter(n=>n.fecha===h&&DB.creditos.some(c=>c.id===n.creditoId));
+    const npBox=$('np-hoy');
+    if(npBox){
+      if(!npHoy.length){ npBox.innerHTML=''; }
+      else {
+        npBox.innerHTML='<details style="background:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:14px;">'
+          +'<summary style="font-weight:700;font-size:.85rem;color:var(--roc);cursor:pointer;">🚫 No pagaron hoy ('+npHoy.length+')</summary>'
+          +npHoy.map(n=>'<div class="pago-row"><div><div style="font-size:.85rem;font-weight:600;">'+n.clienteNombre+'</div><div style="font-size:.72rem;color:var(--gt);">'+(n.nota||'Sin nota')+'</div></div>'
+            +'<button onclick="acc.deshacerNoPago(\''+n.id+'\')" style="background:var(--az);color:#fff;border:none;border-radius:7px;padding:5px 9px;font-size:.7rem;font-weight:700;cursor:pointer;white-space:nowrap;">↩️ A la ruta</button></div>').join('')
+          +'</details>';
+      }
     }
   },
 
@@ -1095,7 +1140,7 @@ const renders={
     let orden=[];
     try{ const s=localStorage.getItem('jrcd_ruta_orden'); if(s) orden=JSON.parse(s); }catch{}
     // Ordenar créditos según orden guardado
-    let lista=[...act];
+    let lista=act.filter(c=>!noPagoHoy(c.id));
     if(orden.length){
       const ordenMap={};
       orden.forEach((id,i)=>ordenMap[id]=i);
@@ -1108,6 +1153,7 @@ const renders={
       lista.sort((a,b)=>mora(b)-mora(a));
     }
     const h=hoy();
+    if(!lista.length){ el.innerHTML='<div style="text-align:center;color:var(--gt);padding:30px;font-size:.85rem;">Sin clientes en la ruta de hoy</div>'; ruta._lista=lista; return; }
     el.innerHTML=lista.map((c,i)=>{
       const m=mora(c);
       const cobradoHoy=DB.abonos.some(a=>a.creditoId===c.id&&a.fecha===h);
@@ -1220,6 +1266,26 @@ const renders={
         +'</div>'
         +'</div>';
     }).join('');
+  },
+
+  nopagos(){
+    const mes=parseInt($('np-mes').value), anio=parseInt($('np-anio').value);
+    const q=($('np-bus').value||'').toLowerCase();
+    const pref=anio+'-'+String(mes+1).padStart(2,'0');
+    let lista=(DB.nopagos||[]).filter(n=>(n.fecha||'').startsWith(pref)&&(!q||(n.clienteNombre||'').toLowerCase().includes(q)));
+    lista.sort((a,b)=>b.fecha.localeCompare(a.fecha)||(b.id||'').localeCompare(a.id||''));
+    const porCli={};
+    lista.forEach(n=>{ porCli[n.clienteNombre]=(porCli[n.clienteNombre]||0)+1; });
+    const rank=Object.entries(porCli).sort((a,b)=>b[1]-a[1]);
+    $('np-resumen').innerHTML='<div class="det-row"><span class="det-l">Total "No pagó" del mes</span><span class="det-v" style="color:var(--roc)">'+lista.length+'</span></div>'
+      +'<div class="det-row" style="border:none"><span class="det-l">Clientes distintos</span><span class="det-v">'+rank.length+'</span></div>'
+      +(rank.length?'<div class="sec-title" style="margin-top:12px;">Más reincidentes</div>'+rank.slice(0,8).map(r=>'<div class="det-row"><span class="det-l">'+r[0]+'</span><span class="det-v" style="color:var(--roc)">'+r[1]+' vez'+(r[1]>1?'es':'')+'</span></div>').join(''):'');
+    const el=$('np-lista');
+    if(!lista.length){ el.innerHTML='<div style="text-align:center;color:var(--gt);padding:20px;font-size:.85rem;">Sin registros de "No pagó"</div>'; return; }
+    const esAdm=ROL==='admin';
+    el.innerHTML=lista.map(n=>'<div class="pago-row"><div><div style="font-size:.85rem;font-weight:600;">'+n.clienteNombre+'</div>'
+      +'<div style="font-size:.72rem;color:var(--gt);">'+fmtF(n.fecha)+' · '+(n.nota||'Sin nota')+(n.cobrador?' · '+n.cobrador:'')+'</div></div>'
+      +(esAdm?'<button style="background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;" onclick="acc.eliminarNoPago(\''+n.id+'\')">✕</button>':'')+'</div>').join('');
   },
 
   cobros(){
@@ -1699,6 +1765,9 @@ const acc={
       valor:val,fecha:fechaAbono,obs:$('abo-obs').value.trim(),
       cobrador:nomCobrador,cobradorUid:UID};
     DB.abonos.push(a);
+    // Si estaba marcado "No pagó" ese día y luego pagó, se quita la marca
+    const npPrev=(DB.nopagos||[]).filter(x=>x.creditoId===cid&&x.fecha===fechaAbono);
+    if(npPrev.length){ DB.nopagos=DB.nopagos.filter(x=>!npPrev.includes(x)); npPrev.forEach(x=>fsDel('nopagos',x.id)); }
     // Recalcular saldo desde cero usando todos los abonos reales
     const totalAbonado = DB.abonos
       .filter(x=>x.creditoId===cred.id)
@@ -1709,6 +1778,36 @@ const acc={
     cerrarMb('m-abo');renders.inicio();
     await Promise.all([fsSet('abonos',a.id,a),fsSet('creditos',cred.id,cred)]).catch(()=>bk());
     toast('✅ Abono registrado');
+  },
+
+  async marcarNoPago(cid){
+    const c=DB.creditos.find(x=>x.id===cid);if(!c)return;
+    if(noPagoHoy(cid)){toast('Ya está marcado como "No pagó" hoy');return;}
+    const nota=prompt('🚫 '+c.clienteNombre+' no pagó hoy.\nMotivo (opcional):','');
+    if(nota===null)return;
+    let nom='';
+    try{ const snap=await FS.collection('usuarios').doc(UID).get(); if(snap.exists)nom=snap.data().nombre||snap.data().email||''; }catch{}
+    const n={id:uid(),creditoId:cid,clienteId:c.clienteId,clienteNombre:c.clienteNombre,fecha:hoy(),nota:nota.trim(),cobrador:nom,cobradorUid:UID};
+    DB.nopagos=DB.nopagos||[]; DB.nopagos.push(n);
+    renders.inicio(); renders.ruta();
+    const ok=await fsSet('nopagos',n.id,n);
+    toast(ok?'🚫 Marcado como "No pagó" · sale de la ruta de hoy':'⚠️ Marcado solo en este dispositivo (revisa permisos de Firebase)');
+  },
+
+  async deshacerNoPago(id){
+    DB.nopagos=(DB.nopagos||[]).filter(x=>x.id!==id);
+    renders.inicio(); renders.ruta();
+    await fsDel('nopagos',id);
+    toast('↩️ Cliente devuelto a la ruta');
+  },
+
+  async eliminarNoPago(id){
+    if(ROL!=='admin'){toast('⛔ Solo el admin puede eliminar');return;}
+    if(!confirm('¿Eliminar este registro de "No pagó"?'))return;
+    DB.nopagos=(DB.nopagos||[]).filter(x=>x.id!==id);
+    renders.nopagos(); renders.inicio();
+    await fsDel('nopagos',id);
+    toast('🗑 Registro eliminado');
   },
 
   async eliminarAbono(aboId,credId){
@@ -2020,7 +2119,12 @@ const ruta = {
   },
   guardar(){
     const el=$('ruta-lista');
-    const ids=[...el.querySelectorAll('.ruta-item')].map(item=>item.dataset.id);
+    let ids=[...el.querySelectorAll('.ruta-item')].map(item=>item.dataset.id);
+    // Conservar en el orden a los clientes ocultos hoy por "No pagó"
+    try{
+      const prev=JSON.parse(localStorage.getItem('jrcd_ruta_orden')||'[]');
+      prev.forEach((id,i)=>{ if(!ids.includes(id)) ids.splice(Math.min(i,ids.length),0,id); });
+    }catch{}
     // Clave FIJA — persiste hasta nueva orden
     localStorage.setItem('jrcd_ruta_orden', JSON.stringify(ids));
     // Guardar en Firebase para compartir con cobradores
