@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v53</title>
+<title>JR COBRO DIARIO v54</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1533,20 +1533,20 @@ const modales={
     const btnNuevo=$('d-nuevo-cred'), btnNuevo2=$('d-nuevo-cred2');
     const irNuevo=()=>{ cerrarMb('m-det'); modales.abrirNuevoCredito(c.clienteId,c.clienteNombre,c.clienteTel||''); };
     if(btnNuevo){
-      btnNuevo.style.display=(esAdmin&&c.estado==='pagado')?'block':'none';
+      btnNuevo.style.display='none';
       btnNuevo.textContent='🔄 Reabrir crédito (crear uno nuevo)';
       btnNuevo.onclick=irNuevo;
     }
     if(btnNuevo2){ btnNuevo2.textContent='➕ Nuevo Crédito'; btnNuevo2.onclick=irNuevo; }
     if($('d-elim-cli')) $('d-elim-cli').style.display='none';
     // Cambiar texto botón según estado
-    if($('d-can')) $('d-can').style.display=(esAdmin&&c.estado==='pagado')?'none':'';
+    if($('d-can')) $('d-can').style.display='';
     if(esAdmin){
       const btnCan=$('d-can');
       if(btnCan){
         if(c.estado==='pagado'){
-          btnCan.textContent='🔄 Reactivar crédito';
-          btnCan.className='btn btn-az';
+          btnCan.textContent='🔄 Reabrir crédito';
+          btnCan.className='btn btn-ve';
         } else if(c.estado==='cancelado'){
           btnCan.textContent='🔄 Reactivar crédito';
           btnCan.className='btn btn-az';
@@ -1611,7 +1611,7 @@ const modales={
     }
     if(esAdmin){
       $('d-can').onclick=async()=>{
-        if(c.estado==='pagado'){ toast('✅ Este crédito ya está saldado. Para reabrirlo, elimina su último abono.'); return; }
+        if(c.estado==='pagado'){ irNuevo(); return; }
         if(c.estado==='cancelado'){
           if(!confirm('¿Reactivar este crédito?'))return;
           c.estado=((parseFloat(c.saldo)||0)>0)?'activo':'pagado';
