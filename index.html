@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v51</title>
+<title>JR COBRO DIARIO v52</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1600,6 +1600,14 @@ const modales={
     }
     if(esAdmin){
       $('d-can').onclick=async()=>{
+        if(c.estado==='pagado'){ toast('✅ Este crédito ya está saldado. Para reabrirlo, elimina su último abono.'); return; }
+        if(c.estado==='cancelado'){
+          if(!confirm('¿Reactivar este crédito?'))return;
+          c.estado=((parseFloat(c.saldo)||0)>0)?'activo':'pagado';
+          cerrarMb('m-det'); renders.inicio(); renders.creditos();
+          await fsSet('creditos',c.id,c); toast('🔄 Crédito reactivado ('+(c.estado==='activo'?'activo':'pagado')+')');
+          return;
+        }
         if(!confirm('¿Cancelar este crédito?'))return;
         c.estado='cancelado'; cerrarMb('m-det'); renders.inicio(); renders.creditos();
         await fsSet('creditos',c.id,c); toast('🗑 Crédito cancelado');
