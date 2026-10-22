@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JR COBRO DIARIO">
-<title>JR COBRO DIARIO v52</title>
+<title>JR COBRO DIARIO v53</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1529,7 +1529,18 @@ const modales={
     const esAdmin=ROL==='admin';
     $('d-btns-admin').style.display=esAdmin?'grid':'none';
     $('d-btns-cobrador').style.display=esAdmin?'none':'grid';
+    // Botón "Nuevo crédito" según estado (para créditos finalizados: reabrir = crear uno nuevo)
+    const btnNuevo=$('d-nuevo-cred'), btnNuevo2=$('d-nuevo-cred2');
+    const irNuevo=()=>{ cerrarMb('m-det'); modales.abrirNuevoCredito(c.clienteId,c.clienteNombre,c.clienteTel||''); };
+    if(btnNuevo){
+      btnNuevo.style.display=(esAdmin&&c.estado==='pagado')?'block':'none';
+      btnNuevo.textContent='🔄 Reabrir crédito (crear uno nuevo)';
+      btnNuevo.onclick=irNuevo;
+    }
+    if(btnNuevo2){ btnNuevo2.textContent='➕ Nuevo Crédito'; btnNuevo2.onclick=irNuevo; }
+    if($('d-elim-cli')) $('d-elim-cli').style.display='none';
     // Cambiar texto botón según estado
+    if($('d-can')) $('d-can').style.display=(esAdmin&&c.estado==='pagado')?'none':'';
     if(esAdmin){
       const btnCan=$('d-can');
       if(btnCan){
@@ -1632,7 +1643,7 @@ const modales={
       +'<div class="det-row"><span class="det-l">Créditos activos</span><span class="det-v">'+crs.filter(x=>x.estado==='activo').length+'</span></div>'
       +'<div class="det-row" style="border:none"><span class="det-l">Total abonado</span><span class="det-v" style="color:var(--vec)">'+fmt(tAbo)+'</span></div>';
     $('d-abo').onclick=()=>{ cerrarMb('m-det'); modales.abrirAbono(); };
-    $('d-can').textContent='✏️ Editar'; $('d-can').className='btn btn-az';
+    $('d-can').style.display=''; $('d-can').textContent='✏️ Editar'; $('d-can').className='btn btn-az';
     $('d-can').onclick=()=>{ cerrarMb('m-det'); modales.abrirCliente(id); };
     $('d-wa').onclick=()=>{
       waMsgActual='Hola '+c.nombre+', le contactamos de JR COBRO DIARIO.';
@@ -1644,7 +1655,7 @@ const modales={
     // Botón nuevo crédito — visible para todos
     const btnNC = $('d-nuevo-cred');
     if(btnNC){
-      btnNC.style.display = 'block';
+      btnNC.style.display = 'block'; btnNC.textContent='➕ Nuevo Crédito';
       btnNC.onclick = ()=>{ cerrarMb('m-det'); modales.abrirNuevoCredito(id, c.nombre, c.tel); };
     }
     // Botón nuevo crédito para cobrador
